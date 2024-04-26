@@ -38,6 +38,7 @@ interface Message {
     text: string | undefined;
     text_entities: (TextLike | Pre | TextLink)[];
     date: string;
+    date_unixtime: number;
     // modifiers
     edited: string | undefined;
     reply_to_message_id: number | undefined;

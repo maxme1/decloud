@@ -49,7 +49,7 @@
     });
 </script>
 
-<div class="h-screen overflow-hidden">
+<div class="h-screen">
     <div class="flex">
         <Sidebar {activeUrl} {activeClass} {nonActiveClass}>
             <SidebarWrapper>
@@ -75,7 +75,7 @@
             </p>
         </div> -->
 
-            <div class="p-2 w-full">
+            <div class="p-2 w-full h-screen flex flex-col">
                 <ChatTimeline {messages} chatName={activeChat[1]} />
             </div>
         {/if}

@@ -6,11 +6,11 @@ from pathlib import Path
 
 import deli
 from tqdm.auto import tqdm
-from functools import cache
-import os
 
 
-@cache
+MISSING_FILE = '(File not included. Change data exporting settings to download.)'
+
+
 def transfer(path, storage):
     hasher = hashlib.sha256()
     with open(path, 'rb') as file:
@@ -23,31 +23,44 @@ def transfer(path, storage):
             ext = '.' + path.name.split('.')[-1]
 
     relative = f'storage/{hasher.hexdigest()}{ext}'
+    (storage / 'storage').mkdir(exist_ok=True)
     target = storage / relative
     if not target.exists():
-        shutil.move(path, target)
-    else:
-        os.remove(path)
+        shutil.copyfile(path, target)
 
     return relative
 
 
-def normalize_(content, root, storage):
-    paths = ['file', 'thumbnail', 'photo']
-    for m in tqdm(content['messages']):
-        for key in paths:
-            if key in m:
-                m[key] = transfer(root / m[key], storage)
-
-
 def normalize(storage, root):
+    def replace(d, k):
+        if k not in d:
+            return
+        if d[k] == MISSING_FILE:
+            return
+
+        local = root / d[k]
+        if local not in mapping:
+            mapping[local] = transfer(local, storage)
+        d[k] = mapping[local]
+
     root, storage = Path(root), Path(storage)
 
     content = deli.load(root / 'result.json')
-    normalize_(content, root, storage)
-    # TODO: don't remove anything and just keep a list of visited files
-    assert [x for x in root.rglob('*') if not x.is_dir()] == [root / 'result.json']
-    shutil.rmtree(root)
+    mapping = {}
+    for message in tqdm(content['messages']):
+        for key in 'file', 'thumbnail', 'photo', 'contact_vcard':
+            replace(message, key)
+
+        for entity in message['text_entities']:
+            replace(entity, 'document_id')
+        if isinstance(message['text'], list):
+            for text in message['text']:
+                if isinstance(text, dict):
+                    replace(text, 'document_id')
+
+    # make sure we copied all the files
+    missing = {x for x in root.rglob('*') if not x.is_dir()} - set(mapping) - {root / 'result.json'}
+    assert not missing, missing
 
     chat_id = content['id']
     current_path = storage / f'{chat_id}.json'
@@ -59,12 +72,13 @@ def normalize(storage, root):
         mapping = {x['id']: x for x in current['messages']}
         assert len(mapping) == len(current['messages'])
 
-        for m in content['messages']:
-            if m['id'] in mapping:
-                assert json.dumps(m, sort_keys=True) == json.dumps(mapping[m['id']], sort_keys=True)
+        for message in content['messages']:
+            if message['id'] in mapping:
+                old = mapping[message['id']]
+                assert json.dumps(message, sort_keys=True) == json.dumps(old, sort_keys=True), (old, message)
 
             else:
-                current['messages'].append(m)
+                current['messages'].append(message)
 
         current['name'] = content['name']
 
