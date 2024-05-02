@@ -1,81 +1,42 @@
+import type { Message, PhoneCall, EditChatTheme, InviteMembers, EditGroupPhoto, MigrateFromGroup, MigrateToSupergroup } from "./schema";
 
-interface TextLike {
-    type:
-    | "plain"
-    | "hashtag"
-    | "link"
-    | "code"
-    | "email"
-    | "phone"
-    | "mention"
-    | "bold"
-    | "italic";
-    text: string;
-}
-interface Pre {
-    type: "pre";
-    text: string;
-    language: string;
-}
-interface TextLink {
-    type: "text_link";
-    text: string;
-    href: string;
-}
-interface Location {
-    latitude: number;
-    longitude: number;
-}
-interface Contact {
-    phone_number: string;
-    first_name: string;
-    last_name: string;
+export type Service = PhoneCall | EditChatTheme | EditGroupPhoto | InviteMembers | MigrateFromGroup | MigrateToSupergroup;
+export type AnyMessage = Message | Service;
+
+function newGroup(present: AnyMessage, message: AnyMessage): boolean {
+    if (present.type !== message.type) {
+        return true;
+    }
+    if (present.type === 'service') {
+        message = message as Service;
+        if (present.actor_id !== message.actor_id) {
+            return true;
+        }
+        if (present.action !== message.action) {
+            return true;
+        }
+    } else {
+        message = message as Message;
+        if (present.from_id !== message.from_id) {
+            return true;
+        }
+    }
+    return false;
 }
 
-interface Message {
-    type: "message" | "service";
-    from: string;
-    text: string | undefined;
-    text_entities: (TextLike | Pre | TextLink)[];
-    date: string;
-    date_unixtime: number;
-    // modifiers
-    edited: string | undefined;
-    reply_to_message_id: number | undefined;
-    forwarded_from: string | undefined;
-    via_bot: string | undefined;
-    // actions
-    action: "phone_call" | undefined;
-    actor: string | undefined;
-    discard_reason: string | undefined;
-    // media
-    media_type:
-    | "sticker"
-    | "animation"
-    | "video_file"
-    | "audio_file"
-    | "voice_message"
-    | "video_message"
-    | undefined;
-    photo: string | undefined;
-    file: string | undefined;
-    thumbnail: string | undefined;
-    mime_type: string | undefined;
-    location_information: Location | undefined;
-    contact_information: Contact | undefined;
-    live_location_period_seconds: number | undefined;
-}
-
-function groupMessages(messages: Message[]): Message[][] {
-    let result: Message[][] = [];
-    let current: Message[] = [];
-    for (let i = 0; i < messages.length; i++) {
-        const message = messages[i];
-        if (current.length === 0 || !(message.type === "service" || message.from !== current[0].from)) {
+export function groupMessages(messages: AnyMessage[]): AnyMessage[][] {
+    let result: AnyMessage[][] = [];
+    let current: AnyMessage[] = [];
+    for (const message of messages) {
+        if (current.length === 0) {
             current.push(message);
-        } else {
+            continue;
+        }
+        if (newGroup(current[0], message)) {
             result.push(current);
             current = [message];
+        } else {
+            current.push(message);
         }
     }
     if (current.length > 0) {
@@ -84,4 +45,4 @@ function groupMessages(messages: Message[]): Message[][] {
     return result
 }
 
-export { type Message, groupMessages };
+export { type Message };

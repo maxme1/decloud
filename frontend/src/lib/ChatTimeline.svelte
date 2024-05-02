@@ -10,25 +10,30 @@
     import InfiniteScroll from "svelte-infinite-scroll";
     import { List, Li } from "flowbite-svelte";
     import { onMount } from "svelte";
-    import { groupMessages, type Message } from "./timeline";
+    import {
+        groupMessages,
+        type AnyMessage,
+        type Message,
+        type Service,
+    } from "./timeline";
     import MessagesGroup from "./MessagesGroup.svelte";
-    import SystemGroup from "./SystemGroup.svelte";
+    import ServiceGroup from "./ServiceGroup.svelte";
     import CheckboxList from "./CheckboxList.svelte";
     import {
         UserSettingsOutline,
         ChartPieOutline,
     } from "flowbite-svelte-icons";
-    import WeekdaysPostCount from "./WeekdaysPostCount.svelte";
+    import PostGraphs from "./PostGraphs.svelte";
 
-    export let messages: Message[];
+    export let messages: AnyMessage[];
     export let chatName: string;
 
     let messagesElement: HTMLElement;
-    let page = 0;
     const perPage = 100;
     let maxPage = Math.ceil(messages.length / perPage);
-    let groups: Message[][] = [];
-    let filtered: Message[] = [];
+    let page = 0;
+    let groups: AnyMessage[][] = [];
+    let filtered: AnyMessage[] = [];
 
     // display
     let showStats: boolean = false;
@@ -37,39 +42,48 @@
     let showFilters: boolean = false;
     let textFilter: string = "";
     let allUsers: string[] = [];
-    let users: Set<string> = new Set();
-
+    let allMedia: string[] = [];
     const allTypes = ["message", "service"];
+    let users = new Set<string>();
+    let media = new Set<string>();
     let types = new Set<string>(allTypes);
-    const allMedia = [
-        "sticker",
-        "animation",
-        "video_file",
-        "audio_file",
-        "voice_message",
-        "video_message",
-        "none",
-    ];
-    let media = new Set<string>(allMedia);
+
+    $: {
+        const realMessages = messages.filter(
+            (message): message is Message => message.type === "message",
+        );
+        allUsers = Array.from(
+            new Set(realMessages.map((message) => message.from)),
+        );
+        users = new Set(allUsers);
+        allMedia = Array.from(
+            new Set(
+                realMessages.map((message) => message.media_type ?? "none"),
+            ),
+        );
+        media = new Set(allMedia);
+    }
 
     $: filtered = messages.filter((message) => {
         // text
-        if (
-            textFilter !== "" &&
-            (message.text == undefined || !message.text.includes(textFilter))
-        ) {
+        if (textFilter !== "" && !message.text.includes(textFilter)) {
             return false;
         }
         // type
         if (!types.has(message.type)) {
             return false;
         }
-        // media
-        if (!media.has(message.media_type ?? "none")) {
-            return false;
+        // message-specific
+        if (message.type == "message") {
+            if (!media.has(message.media_type ?? "none")) {
+                return false;
+            }
+            if (!users.has(message.from)) {
+                return false;
+            }
         }
 
-        return message.from === undefined || users.has(message.from);
+        return true;
     });
     $: groups = groupMessages(
         filtered
@@ -78,16 +92,14 @@
             .reverse(),
     );
 
-    onMount(() => {
-        allUsers = Array.from(
-            new Set(
-                messages
-                    .filter((message) => message.from !== undefined)
-                    .map((message) => message.from),
-            ),
-        );
-        users = new Set(allUsers);
+    function isMessage(group: AnyMessage[]): group is Message[] {
+        return group[0].type === "message";
+    }
+    function isService(group: AnyMessage[]): group is Service[] {
+        return group[0].type === "service";
+    }
 
+    onMount(() => {
         messagesElement!.scrollTop = messagesElement!.scrollHeight;
     });
 </script>
@@ -149,24 +161,7 @@
 
     <div class="overflow-auto" bind:this={messagesElement}>
         {#if showStats}
-            <div class="flex flex-col p-4">
-                <p class="text-lg font-semibold text-gray-900 dark:text-white">
-                    Stats
-                </p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Messages: {filtered.length}
-                </p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Users: {users.size}
-                </p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Types: {types.size}
-                </p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Media: {media.size}
-                </p>
-            </div>
-            <WeekdaysPostCount {messages} />
+            <PostGraphs messages={filtered} />
         {:else}
             {#if groups.length == 0}
                 <div class="flex items-center justify-center p-4">
@@ -177,20 +172,16 @@
                     </p>
                 </div>
             {/if}
-            <List
-                tag="ul"
-                list="none"
-                class="divide-y divide-gray-200 dark:divide-gray-700"
-            >
+            <List tag="ul" list="none">
                 {#each groups as group}
-                    <Li class="pb-3 sm:pb-4">
+                    <Li>
                         <div
                             class="flex items-center space-x-4 rtl:space-x-reverse"
                         >
-                            {#if group[0].type == "message"}
+                            {#if isMessage(group)}
                                 <MessagesGroup {group} />
-                            {:else if group[0].type == "service"}
-                                <SystemGroup {group} />
+                            {:else if isService(group)}
+                                <ServiceGroup {group} />
                             {/if}
                             <!-- <div class="flex-shrink-0">
                         <img

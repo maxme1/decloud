@@ -12,44 +12,63 @@
 </script>
 
 <div class="relative root m-1 rounded">
-    <div class="flex hover:bg-gray-50">
-        {#if message.photo !== undefined}
-            <Img src={filesRoot + message.photo} class="max-h-48" />
-        {/if}
+    <div class="flex flex-col hover:bg-gray-100">
+        <!-- media -->
+        <div>
+            {#if message.photo}
+                <Img src={filesRoot + message.photo} class="max-h-48" />
+            {/if}
 
-        {#if message.media_type === "sticker"}
-            <Img
-                src={filesRoot + message.file}
-                class="max-h-36"
-                style="filter: drop-shadow(3px 3px 3px #aaa)"
-            />
-        {:else if message.media_type === "animation" && message.mime_type === "image/gif"}
-            <Img src={filesRoot + message.file} class="max-h-48" />
-        {:else if message.media_type === "animation" || message.media_type === "video_file" || message.media_type === "video_message"}
-            <Img
-                src={filesRoot + (message.thumbnail ?? message.file)}
-                class="max-h-48 rounded"
-            />
-            <!-- <Video
-            src={filesRoot + message.file}
-            muted
-            controls
-            type={message.mime_type}
-            class="max-h-72"
-        /> -->
-        {:else if message.media_type == "audio_file" || message.media_type == "voice_message"}
-            <audio controls>
-                <source
-                    src={filesRoot + message.file}
-                    type={message.mime_type}
+            {#if message.media_type === "sticker"}
+                {#if message.file?.endsWith(".tgs")}
+                    <!-- FIXME -->
+                    <Img
+                        src={filesRoot + message.thumbnail}
+                        class="max-h-36"
+                        style="filter: drop-shadow(3px 3px 3px #aaa)"
+                    />{:else}
+                    <Img
+                        src={filesRoot + message.file}
+                        class="max-h-36"
+                        style="filter: drop-shadow(3px 3px 3px #aaa)"
+                    />
+                {/if}
+            {:else if message.media_type === "animation"}
+                {#if message.mime_type === "image/gif"}
+                    <Img
+                        src={filesRoot + message.file}
+                        class="max-h-36 rounded"
+                    />
+                {:else}
+                    <Video
+                        src={filesRoot + message.file}
+                        muted
+                        autoplay
+                        loop
+                        type={message.mime_type ?? "video/mp4"}
+                        class="max-h-36 rounded"
+                    />
+                {/if}
+            {:else if message.media_type === "video_file" || message.media_type === "video_message"}
+                <Img
+                    src={filesRoot + (message.thumbnail ?? message.file)}
+                    class="max-h-48 rounded"
                 />
-                Your browser does not support the audio element.
-            </audio>
-        {:else if message.file !== undefined}
-            SOME FILE
-        {/if}
+            {:else if message.media_type == "audio_file" || message.media_type == "voice_message"}
+                <audio controls>
+                    <source
+                        src={filesRoot + message.file}
+                        type={message.mime_type}
+                    />
+                    Your browser does not support the audio element.
+                </audio>
+            {:else if message.file}
+                {console.log("Unknown media type: " + message.media_type)}
+                SOME FILE
+            {/if}
+        </div>
 
-        {#if message.location_information !== undefined}
+        {#if message.location_information}
             <div class="flex items">
                 <p class="text-sm text-gray-500 dark:text-gray-400">
                     {message.location_information.latitude},
@@ -58,7 +77,7 @@
             </div>
         {/if}
 
-        {#if message.contact_information !== undefined}
+        {#if message.contact_information}
             <div class="flex items">
                 <p class="text-sm text-gray-500 dark:text-gray-400">
                     {message.contact_information.phone_number},
@@ -88,9 +107,11 @@
                 {:else if entity.type === "italic"}
                     <em>{entity.text}</em>
                 {:else if entity.type == "link"}
-                    <a href={entity.text}>{entity.text}</a>
+                    <a href={entity.text} class="text-blue-500">{entity.text}</a
+                    >
                 {:else if entity.type == "text_link"}
-                    <a href={entity.href}>{entity.text}</a>
+                    <a href={entity.href} class="text-blue-500">{entity.text}</a
+                    >
                 {:else if entity.type === "code"}
                     <span
                         class="whitespace-pre-wrap overflow-auto bg-gray-300 rounded p-0.5"
@@ -99,6 +120,8 @@
                 {:else if entity.type === "pre"}
                     <pre
                         class="whitespace-pre-wrap overflow-auto bg-gray-300 rounded p-1.5">{entity.text}</pre>
+                {:else}
+                    {console.log("Unknown entity type: " + entity.type)}
                 {/if}
             {/each}
         </div>
