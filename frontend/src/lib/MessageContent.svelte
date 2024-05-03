@@ -2,6 +2,7 @@
     import { Indicator, Avatar, Badge, Img, Video } from "flowbite-svelte";
     import type { Message } from "./timeline";
     import { filesRoot } from "$lib";
+    import ZoomableImage from "./ZoomableImage.svelte";
 
     export let message: Message;
     const hasBadge =
@@ -16,7 +17,10 @@
         <!-- media -->
         <div>
             {#if message.photo}
-                <Img src={filesRoot + message.photo} class="max-h-48" />
+                <ZoomableImage
+                    src={filesRoot + message.photo}
+                    class="max-h-48"
+                />
             {/if}
 
             {#if message.media_type === "sticker"}

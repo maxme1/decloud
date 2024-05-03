@@ -30,7 +30,9 @@
 
     let messagesElement: HTMLElement;
     const perPage = 100;
-    let maxPage = Math.ceil(messages.length / perPage);
+    let maxPage = 0;
+    $: maxPage = Math.ceil(messages.length / perPage);
+
     let page = 0;
     let groups: AnyMessage[][] = [];
     let filtered: AnyMessage[] = [];
@@ -53,44 +55,51 @@
             (message): message is Message => message.type === "message",
         );
         allUsers = Array.from(
-            new Set(realMessages.map((message) => message.from)),
+            new Set(
+                messages
+                    .filter(
+                        (message): message is Message =>
+                            message.type === "message",
+                    )
+                    .map((message) => message.from),
+            ),
         );
-        users = new Set(allUsers);
         allMedia = Array.from(
             new Set(
                 realMessages.map((message) => message.media_type ?? "none"),
             ),
         );
-        media = new Set(allMedia);
     }
 
-    $: filtered = messages.filter((message) => {
-        // text
-        if (textFilter !== "" && !message.text.includes(textFilter)) {
-            return false;
-        }
-        // type
-        if (!types.has(message.type)) {
-            return false;
-        }
-        // message-specific
-        if (message.type == "message") {
-            if (!media.has(message.media_type ?? "none")) {
+    $: {
+        filtered = messages.filter((message) => {
+            // text
+            if (textFilter !== "" && !message.text.includes(textFilter)) {
                 return false;
             }
-            if (!users.has(message.from)) {
+            // type
+            if (!types.has(message.type)) {
                 return false;
             }
-        }
+            // message-specific
+            if (message.type == "message") {
+                if (!media.has(message.media_type ?? "none")) {
+                    return false;
+                }
+                if (!users.has(message.from)) {
+                    return false;
+                }
+            }
 
-        return true;
-    });
-    $: groups = groupMessages(
-        filtered
-            .reverse()
-            .slice(page * perPage, (page + 1) * perPage)
-            .reverse(),
-    );
+            return true;
+        });
+        groups = groupMessages(
+            filtered
+                .reverse()
+                .slice(page * perPage, (page + 1) * perPage)
+                .reverse(),
+        );
+    }
 
     function isMessage(group: AnyMessage[]): group is Message[] {
         return group[0].type === "message";
@@ -148,14 +157,11 @@
             </div>
         </div>
 
-        {#if showFilters}
-            <div class="flex flex-row">
-                <CheckboxList names={allUsers} bind:active={users} />
-                <CheckboxList names={allTypes} bind:active={types} />
-                <CheckboxList names={allMedia} bind:active={media} />
-            </div>
-        {/if}
-
+        <div class="flex flex-row" class:hidden={!showFilters}>
+            <CheckboxList names={allUsers} bind:active={users} />
+            <CheckboxList names={allTypes} bind:active={types} />
+            <CheckboxList names={allMedia} bind:active={media} />
+        </div>
         <hr />
     </div>
 

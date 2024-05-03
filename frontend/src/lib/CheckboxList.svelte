@@ -2,7 +2,9 @@
     import { Checkbox } from "flowbite-svelte";
 
     export let names: string[];
-    export let active: Set<string> = new Set(names);
+    export let active: Set<string> = new Set();
+
+    $: active = new Set(names);
 
     function toggleUser(name: string) {
         return () => {
