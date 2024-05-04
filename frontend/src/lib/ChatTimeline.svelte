@@ -6,10 +6,12 @@
         Img,
         Video,
         Checkbox,
+        Pagination,
+        ButtonGroup,
+        Button,
     } from "flowbite-svelte";
-    import InfiniteScroll from "svelte-infinite-scroll";
     import { List, Li } from "flowbite-svelte";
-    import { onMount } from "svelte";
+    import { onMount, afterUpdate } from "svelte";
     import {
         groupMessages,
         type AnyMessage,
@@ -22,18 +24,21 @@
     import {
         UserSettingsOutline,
         ChartPieOutline,
+        ChevronLeftOutline,
+        ChevronRightOutline,
     } from "flowbite-svelte-icons";
     import PostGraphs from "./PostGraphs.svelte";
 
     export let messages: AnyMessage[];
     export let chatName: string;
 
+    // pagination
     let messagesElement: HTMLElement;
     const perPage = 100;
     let maxPage = 0;
-    $: maxPage = Math.ceil(messages.length / perPage);
-
     let page = 0;
+    let pages: number[] = [];
+
     let groups: AnyMessage[][] = [];
     let filtered: AnyMessage[] = [];
 
@@ -74,7 +79,12 @@
     $: {
         filtered = messages.filter((message) => {
             // text
-            if (textFilter !== "" && !message.text.includes(textFilter)) {
+            if (
+                textFilter !== "" &&
+                message.text_entities.find((entity) =>
+                    entity.text.includes(textFilter),
+                ) === undefined
+            ) {
                 return false;
             }
             // type
@@ -99,6 +109,28 @@
                 .slice(page * perPage, (page + 1) * perPage)
                 .reverse(),
         );
+
+        maxPage = Math.ceil(filtered.length / perPage);
+        page = Math.min(page, maxPage - 1);
+
+        const edges = 2;
+        const around = 5;
+        pages = Array.from(
+            new Set([
+                ...Array.from(
+                    { length: Math.min(edges, maxPage) },
+                    (_, i) => i,
+                ),
+                ...Array.from(
+                    { length: Math.min(edges, maxPage) },
+                    (_, i) => maxPage - i - 1,
+                ),
+                ...Array.from(
+                    { length: Math.min(around, maxPage) },
+                    (_, i) => page + i - 2,
+                ).filter((i) => i >= 0 && i < maxPage),
+            ]),
+        ).toSorted((a, b) => a - b);
     }
 
     function isMessage(group: AnyMessage[]): group is Message[] {
@@ -107,10 +139,6 @@
     function isService(group: AnyMessage[]): group is Service[] {
         return group[0].type === "service";
     }
-
-    onMount(() => {
-        messagesElement!.scrollTop = messagesElement!.scrollHeight;
-    });
 </script>
 
 <div class="flex flex-col overflow-hidden">
@@ -165,19 +193,16 @@
         <hr />
     </div>
 
-    <div class="overflow-auto" bind:this={messagesElement}>
-        {#if showStats}
-            <PostGraphs messages={filtered} />
-        {:else}
-            {#if groups.length == 0}
-                <div class="flex items-center justify-center p-4">
-                    <p
-                        class="text-lg font-semibold text-gray-900 dark:text-white"
-                    >
-                        No messages
-                    </p>
-                </div>
-            {/if}
+    {#if showStats}
+        <PostGraphs messages={filtered} />
+    {:else if groups.length == 0}
+        <div class="flex items-center justify-center p-4">
+            <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                No messages
+            </p>
+        </div>
+    {:else}
+        <div class="overflow-auto" bind:this={messagesElement}>
             <List tag="ul" list="none">
                 {#each groups as group}
                     <Li>
@@ -204,6 +229,41 @@
         on:loadMore={() => console.log("load")}
     /> -->
             </List>
-        {/if}
-    </div>
+        </div>
+
+        <!-- pagination -->
+        <div class="flex justify-center items-center">
+            <ButtonGroup>
+                <Button
+                    on:click={() => {
+                        page = Math.max(0, page - 1);
+                    }}
+                >
+                    <span class="sr-only">Previous</span>
+                    <ChevronLeftOutline class="w-2.5 h-2.5" />
+                </Button>
+                {#each pages as p}
+                    <!-- class:font-semibold={p == page} -->
+                    <Button
+                        class="px-3 py-1 cursor-pointer"
+                        on:click={() => {
+                            page = p;
+                        }}
+                    >
+                        <span class:font-semibold={p == page}>
+                            {p + 1}
+                        </span>
+                    </Button>
+                {/each}
+                <Button
+                    on:click={() => {
+                        page = Math.min(maxPage - 1, page + 1);
+                    }}
+                >
+                    <span class="sr-only">Next</span>
+                    <ChevronRightOutline class="w-2.5 h-2.5" />
+                </Button>
+            </ButtonGroup>
+        </div>
+    {/if}
 </div>

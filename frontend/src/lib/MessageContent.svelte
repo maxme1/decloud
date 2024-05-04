@@ -66,9 +66,15 @@
                     />
                     Your browser does not support the audio element.
                 </audio>
-            {:else if message.file}
-                {console.log("Unknown media type: " + message.media_type)}
-                SOME FILE
+            {:else}
+                {#if message.media_type}
+                    {console.log("Unknown media type: " + message.media_type)}
+                {/if}
+                {#if message.file}
+                    <a href={filesRoot + message.file} class="text-blue-500"
+                        >File</a
+                    >
+                {/if}
             {/if}
         </div>
 
