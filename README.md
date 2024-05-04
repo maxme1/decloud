@@ -2,7 +2,7 @@
 
 This is a minimalistic browser of your local [backups of Telegram chats](https://telegram.org/blog/export-and-more).
 
-A live version is available [here]().
+A live version is available [here](). I created a generic chat as an example.
 
 # What can it do?
 

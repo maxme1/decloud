@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  check_version:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -14,9 +14,14 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.11'
+      - run: mkdir -p frontend/static/chats python normalizer/main.py frontend/static/chats assets/chat1
       - run: GLOBIGNORE='n*' mv frontend/* .
-      - run: npm i && npm run build
-      - run: git fetch origin gh-pages --depth=1 && git checkout gh-pages 
+      - run: npm i
+      - run: VITE_FILE_SERVER="/chats" npm run build
+      - run: git fetch origin gh-pages --depth=1 && git checkout gh-pages
       - run: mv build /tmp/ && rm -rf ./* && mv /tmp/build/* .
       - run: |
           git config --global user.name 'github-actions[bot]'

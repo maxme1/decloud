@@ -11,6 +11,7 @@
         migrate_from_group: "migrated from group",
         create_group: "created the group",
         phone_call: "called",
+        edit_chat_theme: "changed the chat theme",
     };
 </script>
 

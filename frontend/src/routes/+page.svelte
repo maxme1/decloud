@@ -1,5 +1,6 @@
 <script lang="ts">
     import { page } from "$app/stores";
+    import { filesRoot } from "$lib";
     import ChatTimeline from "$lib/ChatTimeline.svelte";
     import type { Message } from "$lib/timeline";
     import {
@@ -30,7 +31,7 @@
             messages = [];
         } else {
             const result = await (
-                await fetch(`http://localhost:3000/${chat[0]}.json`)
+                await fetch(`${filesRoot}/${chat[0]}.json`)
             ).json();
             messages = result["messages"];
         }
@@ -38,9 +39,7 @@
     }
 
     onMount(async () => {
-        const response = await (
-            await fetch("http://localhost:3000/chats.json")
-        ).json();
+        const response = await (await fetch(`${filesRoot}/chats.json`)).json();
         for (let chat in response) {
             chats.push([chat, response[chat]]);
         }
