@@ -21,9 +21,9 @@ jobs:
       - run: mkdir -p frontend/static/chats && python normalizer/main.py frontend/static/chats assets/chat1
       - run: GLOBIGNORE='n*' mv frontend/* .
       - run: npm i --force
-      - run: VITE_FILE_SERVER="/chats" npm run build
+      - run: VITE_FILE_SERVER="/chats" npm run deploy
       - run: git fetch origin gh-pages --depth=1 && git checkout gh-pages
-      - run: mv build /tmp/ && GLOBIGNORE='n*' rm -rf ./* && mv /tmp/build/* .
+      - run: mv build /tmp/ && GLOBIGNORE='n*' rm -rf ./* && mv /tmp/build/chat-browser/* .
       - run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions-bot@users.noreply.github.com'
