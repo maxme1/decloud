@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-python@v3
         with:
           python-version: '3.11'
-      - run: mkdir -p frontend/static/chats python normalizer/main.py frontend/static/chats assets/chat1
+      - run: mkdir -p frontend/static/chats && python normalizer/main.py frontend/static/chats assets/chat1
       - run: GLOBIGNORE='n*' mv frontend/* .
       - run: npm i
       - run: VITE_FILE_SERVER="/chats" npm run build
