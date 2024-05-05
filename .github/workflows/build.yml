@@ -20,7 +20,7 @@ jobs:
       - run: pip install -r normalizer/requirements.txt
       - run: mkdir -p frontend/static/chats && python normalizer/main.py frontend/static/chats assets/chat1
       - run: GLOBIGNORE='n*' mv frontend/* .
-      - run: npm i
+      - run: npm i --force
       - run: VITE_FILE_SERVER="/chats" npm run build
       - run: git fetch origin gh-pages --depth=1 && git checkout gh-pages
       - run: mv build /tmp/ && rm -rf ./* && mv /tmp/build/* .
