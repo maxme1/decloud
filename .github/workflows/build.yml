@@ -23,7 +23,7 @@ jobs:
       - run: npm i --force
       - run: VITE_FILE_SERVER="/chats" npm run deploy
       - run: git fetch origin gh-pages --depth=1 && git checkout gh-pages
-      - run: mv build /tmp/ && GLOBIGNORE='n*' rm -rf ./* && mv /tmp/build/chat-browser/* .
+      - run: mv build /tmp/ && rm -rf ./* && rm -rf .svelte-kit && mv /tmp/build/chat-browser/* . && rm -rf .svelte-kit
       - run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions-bot@users.noreply.github.com'
