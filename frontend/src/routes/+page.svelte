@@ -38,6 +38,42 @@
         activeChat = chat;
     }
 
+    function extractUsers(messages: Message[]): string[] {
+        return Array.from(
+            new Set(
+                messages
+                    .filter(
+                        (message): message is Message =>
+                            message.type === "message",
+                    )
+                    .map((message) => message.from),
+            ),
+        );
+    }
+    function extractMediaTypes(messages: Message[]): string[] {
+        return Array.from(
+            new Set(
+                messages
+                    .filter(
+                        (message): message is Message =>
+                            message.type === "message",
+                    )
+                    .map((message) => message.media_type ?? "none"),
+            ),
+        );
+    }
+    function extractTextTypes(messages: Message[]): string[] {
+        const types = new Set<string>();
+        for (let message of messages) {
+            if (message.type === "message") {
+                for (let entity of message.text_entities) {
+                    types.add(entity.type);
+                }
+            }
+        }
+        return Array.from(types).toSorted();
+    }
+
     onMount(async () => {
         const response = await (await fetch(`${filesRoot}/chats.json`)).json();
         for (let chat in response) {
@@ -75,7 +111,13 @@
         </div> -->
 
             <div class="p-2 w-full h-screen flex flex-col">
-                <ChatTimeline {messages} chatName={activeChat[1]} />
+                <ChatTimeline
+                    {messages}
+                    chatName={activeChat[1]}
+                    users={extractUsers(messages)}
+                    mediaTypes={extractMediaTypes(messages)}
+                    textTypes={extractTextTypes(messages)}
+                />
             </div>
         {/if}
     </div>

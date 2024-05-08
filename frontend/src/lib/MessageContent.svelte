@@ -1,18 +1,24 @@
 <script lang="ts">
     import { Indicator, Avatar, Badge, Img, Video } from "flowbite-svelte";
+    import {
+        ForwardOutline,
+        ReplyOutline,
+        EditOutline,
+        ComputerSpeakerOutline,
+    } from "flowbite-svelte-icons";
     import type { Message } from "./timeline";
     import { filesRoot } from "$lib";
     import ZoomableImage from "./ZoomableImage.svelte";
 
     export let message: Message;
     const hasBadge =
-        message.edited !== undefined ||
-        message.reply_to_message_id !== undefined ||
-        message.forwarded_from !== undefined ||
-        message.via_bot !== undefined;
+        message.edited ||
+        message.reply_to_message_id ||
+        message.forwarded_from ||
+        message.via_bot;
 </script>
 
-<div class="relative root m-1 rounded">
+<div class="relative root m-1 rounded time-parent">
     <div class="flex flex-col hover:bg-gray-100">
         <!-- media -->
         <div>
@@ -138,24 +144,35 @@
     </div>
 
     <div class="absolute bottom-0 right-0 flex">
-        <small class="overlay">{message.date}</small>
+        <small class="time-child bg-white rounded px-1">{message.date}</small>
 
         {#if hasBadge}
-            <Badge color="dark" rounded class="px-2.5 py-0.5 ml-auto">
+            <Badge color="dark" rounded class="px-2.5 py-0.5 ml-auto relative">
                 {#if message.edited !== undefined}
-                    <Indicator color="gray" size="xs" class="me-1" />Edited {message.edited}
+                    <div class="flex items-center badge-parent">
+                        <EditOutline size="xs" class="me-1" />
+                        <span class="badge-child">{message.edited}</span>
+                    </div>
                 {/if}
-
                 {#if message.reply_to_message_id !== undefined}
-                    <Indicator color="green" size="xs" class="me-1" />Replied
+                    <!-- TODO -->
+                    <div class="flex items-center badge-parent">
+                        <ReplyOutline size="xs" class="me-1" />
+                        <span class="badge-child">Replied</span>
+                    </div>
                 {/if}
-
                 {#if message.forwarded_from !== undefined}
-                    <Indicator color="green" size="xs" class="me-1" />Forwarded
-                    from {message.forwarded_from}
+                    <div class="flex items-center badge-parent">
+                        <ForwardOutline size="xs" class="me-1" />
+                        <span class="badge-child">{message.forwarded_from}</span
+                        >
+                    </div>
                 {/if}
                 {#if message.via_bot !== undefined}
-                    <Indicator color="green" size="xs" class="me-1" />Via bot {message.via_bot}
+                    <div class="flex items-center badge-parent">
+                        <ComputerSpeakerOutline size="xs" class="me-1" />
+                        <span class="badge-child">{message.via_bot}</span>
+                    </div>
                 {/if}
             </Badge>
         {/if}
@@ -163,7 +180,10 @@
 </div>
 
 <style>
-    .root:not(:hover) .overlay {
+    .time-parent:not(:hover) .time-child {
+        display: none;
+    }
+    .badge-parent:not(:hover) .badge-child {
         display: none;
     }
 </style>

@@ -3,15 +3,10 @@
         Indicator,
         Avatar,
         Badge,
-        Img,
-        Video,
-        Checkbox,
-        Pagination,
         ButtonGroup,
         Button,
     } from "flowbite-svelte";
     import { List, Li } from "flowbite-svelte";
-    import { onMount, afterUpdate } from "svelte";
     import {
         groupMessages,
         type AnyMessage,
@@ -28,9 +23,13 @@
         ChevronRightOutline,
     } from "flowbite-svelte-icons";
     import PostGraphs from "./PostGraphs.svelte";
+    import CheckBoxBool from "./CheckBoxBool.svelte";
 
     export let messages: AnyMessage[];
     export let chatName: string;
+    export let users: string[];
+    export let mediaTypes: string[];
+    export let textTypes: string[];
 
     // pagination
     let messagesElement: HTMLElement;
@@ -48,33 +47,13 @@
     // filters
     let showFilters: boolean = false;
     let textFilter: string = "";
-    let allUsers: string[] = [];
-    let allMedia: string[] = [];
     const allTypes = ["message", "service"];
-    let users = new Set<string>();
-    let media = new Set<string>();
-    let types = new Set<string>(allTypes);
-
-    $: {
-        const realMessages = messages.filter(
-            (message): message is Message => message.type === "message",
-        );
-        allUsers = Array.from(
-            new Set(
-                messages
-                    .filter(
-                        (message): message is Message =>
-                            message.type === "message",
-                    )
-                    .map((message) => message.from),
-            ),
-        );
-        allMedia = Array.from(
-            new Set(
-                realMessages.map((message) => message.media_type ?? "none"),
-            ),
-        );
-    }
+    let currentUsers = new Set<string>();
+    let currentMedia = new Set<string>();
+    let currentTextTypes = new Set<string>();
+    let currentTypes = new Set<string>(allTypes);
+    let viaBot: boolean | null = null;
+    let replied: boolean | null = null;
 
     $: {
         filtered = messages.filter((message) => {
@@ -88,33 +67,43 @@
                 return false;
             }
             // type
-            if (!types.has(message.type)) {
+            if (!currentTypes.has(message.type)) {
                 return false;
             }
             // message-specific
             if (message.type == "message") {
-                if (!media.has(message.media_type ?? "none")) {
+                if (!currentMedia.has(message.media_type ?? "none")) {
                     return false;
                 }
-                if (!users.has(message.from)) {
+                if (!currentUsers.has(message.from)) {
+                    return false;
+                }
+                if (viaBot !== null && !!message.via_bot !== viaBot) {
+                    return false;
+                }
+                if (
+                    replied !== null &&
+                    !!message.reply_to_message_id !== replied
+                ) {
+                    return false;
+                }
+                if (
+                    currentTextTypes.size < textTypes.length &&
+                    !message.text_entities.some((entity) =>
+                        currentTextTypes.has(entity.type),
+                    )
+                ) {
                     return false;
                 }
             }
 
             return true;
         });
-        groups = groupMessages(
-            filtered
-                .reverse()
-                .slice(page * perPage, (page + 1) * perPage)
-                .reverse(),
-        );
-
-        maxPage = Math.ceil(filtered.length / perPage);
-        page = Math.min(page, maxPage - 1);
 
         const edges = 2;
         const around = 5;
+        maxPage = Math.ceil(filtered.length / perPage);
+        page = Math.min(page, maxPage);
         pages = Array.from(
             new Set([
                 ...Array.from(
@@ -131,6 +120,13 @@
                 ).filter((i) => i >= 0 && i < maxPage),
             ]),
         ).toSorted((a, b) => a - b);
+
+        groups = groupMessages(
+            filtered
+                .reverse()
+                .slice(page * perPage, (page + 1) * perPage)
+                .reverse(),
+        );
     }
 
     function isMessage(group: AnyMessage[]): group is Message[] {
@@ -186,9 +182,33 @@
         </div>
 
         <div class="flex flex-row" class:hidden={!showFilters}>
-            <CheckboxList names={allUsers} bind:active={users} />
-            <CheckboxList names={allTypes} bind:active={types} />
-            <CheckboxList names={allMedia} bind:active={media} />
+            <div class="mx-1">
+                Users
+                <CheckboxList names={users} bind:active={currentUsers} />
+            </div>
+            <div class="mx-1">
+                Message types
+                <CheckboxList names={allTypes} bind:active={currentTypes} />
+            </div>
+            <div class="mx-1">
+                Media types
+                <CheckboxList names={mediaTypes} bind:active={currentMedia} />
+            </div>
+            <div class="mx-1">
+                Text types
+                <CheckboxList
+                    names={textTypes}
+                    bind:active={currentTextTypes}
+                />
+            </div>
+            <div class="mx-1">
+                Via bot
+                <CheckBoxBool bind:active={viaBot} />
+            </div>
+            <div class="mx-1">
+                Replied
+                <CheckBoxBool bind:active={replied} />
+            </div>
         </div>
         <hr />
     </div>

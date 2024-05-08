@@ -1,7 +1,7 @@
 import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 
-const pathBase = process.env.SVELTE_PATH_BASE ? process.env.SVELTE_PATH_BASE : '/';
+const pathBase = process.env.SVELTE_PATH_BASE ? process.env.SVELTE_PATH_BASE : '';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {

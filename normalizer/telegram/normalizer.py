@@ -96,5 +96,3 @@ def normalize(storage, root):
         chats = deli.load(chats_path)
     chats[chat_id] = current['name']
     deli.save(chats, chats_path)
-
-
