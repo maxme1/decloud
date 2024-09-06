@@ -34,6 +34,14 @@ def convert(msg: Service):
     )
 
 
+@convert.register
+def convert(msg: InviteMembers):
+    return SystemMessage(
+        id=str(msg.id), timestamp=msg.date_unixtime, thread=[], blocks=[], reactions=[],
+        event='join', agents=msg.members,
+    )
+
+
 def file_url(x: str) -> str | None:
     if x is None or x == MISSING_FILE:
         return None
@@ -52,7 +60,7 @@ def convert_element(entity: Pre):
 
 @convert_element.register
 def convert_element(entity: TextLink):
-    return Link(url=entity.href, text=entity.text)
+    return Link(url=entity.href, text=Text(text=entity.text))
 
 
 @convert_element.register
@@ -133,7 +141,7 @@ def generate_blocks(msg: Message):
             if mt:
                 raise ValueError(f'Unknown media type: {mt}')
             if msg.file:
-                yield File(url=file_url(msg.file), name=msg.file_name)
+                yield File(url=file_url(msg.file), name=msg.file_name, mimetype=msg.mime_type)
 
     if msg.location_information:
         yield RichText(type='rich_text', elements=[

@@ -8,7 +8,7 @@ import deli
 from .. import elements
 from ..settings import settings
 from ..utils import NoExtra, split_into_segments
-from .mrkdwn import parse
+from .mrkdwn import convert_mrkdwn
 from .utils import file_url, standard_emojis
 
 
@@ -54,25 +54,29 @@ class ElementBase(NoExtra):
     def convert(self):
         dump = self.model_dump()
         style = dump.pop('style', None) or {}
+        assert isinstance(style, dict), (style, type(self))
 
         if 'elements' in dump:
             dump['elements'] = convert_elements(self.elements)
 
-        assert isinstance(style, dict), (style, type(self))
-
-        if style.pop('code', None):
-            dump = elements.Code(element=dump)
-        if style.pop('bold', None):
-            dump = elements.Bold(element=dump)
-        if style.pop('strike', None):
-            dump = elements.Strike(element=dump)
-        if style.pop('italic', None):
-            dump = elements.Italic(element=dump)
-        # TODO: ???
-        style.pop('unlink', None)
-
-        assert not style, (style, type(self))
+        dump = _apply_style(dump, style)
         return dump
+
+
+def _apply_style(x, style):
+    style = (style or {}).copy()
+    if style.pop('code', None):
+        x = elements.Preformat(element=x, language=None)
+    if style.pop('bold', None):
+        x = elements.Bold(element=x)
+    if style.pop('strike', None):
+        x = elements.Strike(element=x)
+    if style.pop('italic', None):
+        x = elements.Italic(element=x)
+    # TODO: ???
+    style.pop('unlink', None)
+    assert not style, style
+    return x
 
 
 class RichTextElement(ElementBase):
@@ -153,7 +157,7 @@ class Mrkdwn(ElementBase):
 
     def convert(self):
         assert not self.style, self.style
-        return elements.Sequence(elements=list(parse(self.text)))
+        return elements.Sequence(elements=convert_mrkdwn(self.text))
 
 
 class Emoji(ElementBase):
@@ -181,6 +185,12 @@ class Link(ElementBase):
     text: str | None = None
 
     unsafe: bool | None = None
+
+    def convert(self):
+        text = self.text
+        if text is not None:
+            text = elements.Text(text=text)
+        return _apply_style(elements.Link(url=self.url, text=text), self.style)
 
 
 class Image(ElementBase):
@@ -223,7 +233,9 @@ class Button(ElementBase):
     confirm: dict | None = None
 
     def convert(self):
-        return self.model_dump()
+        dump = self.model_dump()
+        dump['text'] = self.text.convert()
+        return dump
 
 
 type Element = Union[*ElementBase.__subclasses__()]

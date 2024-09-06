@@ -19,6 +19,7 @@
     import Italic from "./Italic.svelte";
     import Icon from "./Icon.svelte";
     import Code from "./Code.svelte";
+    import Button from "./Button.svelte";
 
     export let element: RichText["elements"][0];
     export let info: ChatInfo;
@@ -30,13 +31,16 @@
         ["text", Text],
         ["channel", Channel],
         ["broadcast", Broadcast],
-        ["list", List],
         ["usergroup", UserGroup],
+
+        ["button", Button],
+
         ["image", Image],
         ["icon", Icon],
 
         ["sequence", Sequence],
         ["section", Section],
+        ["list", List],
 
         ["pre", Preformat],
         ["quote", Quote],
@@ -49,7 +53,7 @@
 
 {#if !components.has(element.type)}
     !!!Element type: {element.type}!!!
-    {console.log(`!!!Element type: ${element.type}!!!`)}
+    {console.log(`!!!Element type: ${element.type}!!!`, element)}
 {:else}
     <svelte:component this={components.get(element.type)} {element} {info}
     ></svelte:component>

@@ -9,6 +9,6 @@
 
 <!-- TODO: deal with overflow -->
 <!-- TODO: language -->
-<pre class="whitespace-pre-wrap bg-gray-300 rounded p-1.5"><Element
+<pre class="whitespace-pre-line bg-gray-300 rounded p-1.5"><Element
         element={element.element}
         {info}></Element></pre>

@@ -12,7 +12,7 @@
     export let message: AgentMessage;
     export let info: ChatInfo;
     const hasBadge = false;
-    let showShared = false;
+    let showShared = message.shared.length == 1;
     // message.edited ||
     // message.reply_to_message_id ||
     // message.forwarded_from ||

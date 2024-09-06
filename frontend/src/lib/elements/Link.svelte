@@ -1,10 +1,15 @@
 <script lang="ts">
     import type { ChatInfo } from "$lib";
     import type { Link } from "$lib/client";
+    import Element from "./Element.svelte";
 
     export let element: Link;
     export let info: ChatInfo;
 </script>
 
-<!-- TODO: element style -->
-<a href={element.url} class="text-blue-500">{element.text ?? element.url}</a>
+<a href={element.url} class="text-blue-500"
+    >{#if element.text}<Element
+            element={element.text}
+            {info}
+        />{:else}{element.url}{/if}</a
+>

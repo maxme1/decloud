@@ -37,11 +37,6 @@ class Preformat(ElementBase):
     language: str | None
 
 
-class Code(ElementBase):
-    type: Literal['code'] = 'code'
-    element: Element
-
-
 # containers
 
 class Sequence(ElementBase):
@@ -87,7 +82,8 @@ class Emoji(ElementBase, EmojiBase):
 class Link(ElementBase):
     type: Literal['link'] = 'link'
     url: str
-    text: str | None = None
+    # FIXME
+    text: Element | None = None
 
     unsafe: bool | None = None
 

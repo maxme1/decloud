@@ -11,6 +11,7 @@
     import Actions from "./Actions.svelte";
     import Context from "./Context.svelte";
     import Header from "./Header.svelte";
+    import Tombstone from "./Tombstone.svelte";
 
     export let block: AgentMessage["blocks"][0];
     export let info: ChatInfo;
@@ -26,6 +27,7 @@
         ["actions", Actions],
         ["context", Context],
         ["header", Header],
+        ["tombstone", Tombstone],
     ]);
 </script>
 

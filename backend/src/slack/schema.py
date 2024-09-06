@@ -134,14 +134,14 @@ class Agent(NoExtra):
     team: str | None = None
 
 
-class FileTombstone(NoExtra):
+class FileTombstone(BaseModel):
     mode: Literal['tombstone']
     id: str
 
 
 class CommonFields(BaseModel):
     id: str
-    file_access: Literal['access_denied', 'visible']
+    file_access: str | Literal['access_denied', 'visible', 'file_not_found']
     timestamp: int
     created: int
     user: str
@@ -154,20 +154,21 @@ class FileExternal(CommonFields, BaseModel):
     title: str
     mimetype: str
     filetype: str
-    pretty_type: str
-    editable: bool
-    size: int
-    is_external: bool
-    external_type: str
-    is_public: bool
-    public_url_shared: bool
-    display_as_bot: bool
-    username: str
-    url_private: str
-    permalink: str
-    is_starred: bool
-    user_team: str
-    has_rich_preview: bool
+
+    # pretty_type: str
+    # editable: bool
+    # size: int
+    # is_external: bool
+    # external_type: str
+    # is_public: bool
+    # public_url_shared: bool
+    # display_as_bot: bool
+    # username: str
+    # url_private: str
+    # permalink: str
+    # is_starred: bool
+    # user_team: str
+    # has_rich_preview: bool
 
 
 class FileInternal(CommonFields, BaseModel):
@@ -177,31 +178,27 @@ class FileInternal(CommonFields, BaseModel):
     title: str
     mimetype: str
     filetype: str
-    pretty_type: str
-    editable: bool
-    size: int
-    is_external: bool
-    external_type: str
-    is_public: bool
-    public_url_shared: bool
-    display_as_bot: bool
-    username: str
-    url_private: str
-    url_private_download: str
-    permalink: str
-    permalink_public: str
-    is_starred: bool
-    user_team: str
-    has_rich_preview: bool
+
+    # pretty_type: str
+    # editable: bool
+    # size: int
+    # is_external: bool
+    # external_type: str
+    # is_public: bool
+    # public_url_shared: bool
+    # display_as_bot: bool
+    # username: str
+    # url_private: str
+    # url_private_download: str
+    # permalink: str
+    # permalink_public: str
+    # is_starred: bool
+    # user_team: str
+    # has_rich_preview: bool
 
 
 class UnknownFile(CommonFields, BaseModel):
     pass
-
-    # @model_validator(mode='before')
-    # def _p(cls, values):
-    #     print(values)
-    #     return values
 
 
 type File = FileTombstone | FileExternal | FileInternal | UnknownFile

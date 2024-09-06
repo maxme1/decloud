@@ -29,30 +29,28 @@
     let chats: Chat[] = [];
     let activeChat: Chat | null = null;
     let messages: Message[] = [];
-    let info: ChatInfo = { agents: [], emojis: {}, channels: [] };
+    let info: ChatInfo = { agents: [], channels: [] };
 
     async function selectChat(chat: Chat | null) {
         if (chat === null) {
             [activeChat, messages, info] = [
                 chat,
                 [],
-                { agents: [], emojis: {}, channels: [] },
+                { agents: [], channels: [] },
             ];
         } else {
-            [activeChat, messages, info] = [
-                chat,
-                await DefaultService.messagesMessagesSourceChatIdGet({
+            const msg = await DefaultService.messagesMessagesSourceChatIdGet({
+                chatId: chat.id,
+                source: chat.source,
+            });
+            const _info = {
+                ...(await DefaultService.infoInfoSourceChatIdGet({
                     chatId: chat.id,
                     source: chat.source,
-                }),
-                {
-                    ...(await DefaultService.infoInfoSourceChatIdGet({
-                        chatId: chat.id,
-                        source: chat.source,
-                    })),
-                    channels: chats,
-                },
-            ];
+                })),
+                channels: chats,
+            };
+            [activeChat, messages, info] = [chat, msg, _info];
         }
     }
 
