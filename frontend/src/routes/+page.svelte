@@ -1,11 +1,11 @@
 <script lang="ts">
     import ChannelsList from "$lib/ChannelsList.svelte";
-    import { DefaultService } from "$lib/client";
     import { onMount } from "svelte";
     import { channels } from "$lib/store";
+    import { ApiService } from "$lib";
 
     onMount(async () => {
-        $channels = await DefaultService.chatsChatsGet();
+        $channels = await ApiService.chatsChatsGet();
     });
 </script>
 

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import datetime
-from typing import Literal, Union
+from typing import Annotated, Literal, Union
 
-from pydantic import field_validator
+from pydantic import BeforeValidator
 
 from .content import ContentBase
 from .events import SystemEvent
@@ -12,6 +12,7 @@ from ...elements import EmojiBase
 from ...schema import AgentMessage, BaseSystemMessage, Reaction, Shared
 
 
+FlaggedTimestamp = Annotated[datetime.datetime | None, BeforeValidator(lambda x: x or None)]
 Content = Union[*ContentBase.__subclasses__()]
 
 
@@ -37,7 +38,7 @@ class Message(TypeDispatch):
 
     content: Content
     date: datetime.datetime
-    edit_date: datetime.datetime | None
+    edit_date: FlaggedTimestamp
 
     interaction_info: InteractionInfo | None = None
     forward_info: ForwardInfo | None = None
@@ -65,10 +66,6 @@ class Message(TypeDispatch):
     sender_business_bot_user_id: int
     unread_reactions: list
     via_bot_user_id: int
-
-    @field_validator('edit_date', mode='before')
-    def _empty_edited(cls, v):
-        return v or None
 
     def convert(self):
         reactions = []
@@ -187,6 +184,7 @@ class ForwardInfo(TypeDispatch):
     class Source(TypeDispatch):
         type_: Literal['forwardSource']
         chat_id: int
+        sender_id: Sender | None = None
         message_id: int
         sender_name: str
         date: datetime.datetime
@@ -195,12 +193,8 @@ class ForwardInfo(TypeDispatch):
     type_: Literal['messageForwardInfo']
     source: Source | None = None
     origin: Origin | None = None
-    date: datetime.datetime | None
+    date: FlaggedTimestamp
     public_service_announcement_type: str
-
-    @field_validator('date', mode='before')
-    def _empty_edited(cls, v):
-        return v or None
 
 
 class OriginBase(TypeDispatch):
@@ -249,7 +243,7 @@ class ReplyTo(TypeDispatch):
     content: Content | None = None
     chat_id: int
     message_id: int
-    origin_send_date: datetime.datetime
+    origin_send_date: FlaggedTimestamp
     quote: dict | None = None
 
 

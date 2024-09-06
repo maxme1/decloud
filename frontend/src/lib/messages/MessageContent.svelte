@@ -7,10 +7,38 @@
     import Elements from "../elements/Elements.svelte";
     import AgentHeader from "./AgentHeader.svelte";
     import Reactions from "./Reactions.svelte";
+    import type { Shared } from "$lib/client";
+    import { activeChannel } from "$lib/store";
 
     export let message: AgentMessage;
     export let info: ChatInfo;
-    let showShared = message.shared.length == 1;
+    let showShared = false;
+    $: showShared = message.shared.length == 1;
+
+    function unpackShared(shared: Shared) {
+        let agent_id = shared.agent_id;
+        let timestamp = shared.timestamp;
+        let elements = shared.elements;
+        if (
+            (agent_id === null || timestamp === null || elements === null) &&
+            shared.id !== null &&
+            // TODO: check channel interface as well
+            shared.channel_id === $activeChannel?.channel.id
+        ) {
+            let message = $activeChannel?.messages.find(
+                (m) => m.id === shared.id,
+            );
+            if (message) {
+                timestamp = message.timestamp;
+                elements = message.elements;
+                if (message.type === "agent") {
+                    agent_id = message.agent_id;
+                }
+            }
+        }
+
+        return { agent_id, timestamp, elements };
+    }
 </script>
 
 <div class="flex flex-col">
@@ -59,7 +87,8 @@
 
             {#if showShared}
                 <div class="pl-2 bg-slate-100 w-full">
-                    {#each message.shared as shared}
+                    {#each message.shared as raw}
+                        {@const shared = unpackShared(raw)}
                         <div class="flex items-center mb-3">
                             <div class="w-full">
                                 <div class="flex justify-start w-full">
@@ -67,14 +96,16 @@
                                         <GroupImage {group} {info} />
                                     </div> -->
                                     <div class="ml-1 px-1 w-full mb-1">
-                                        {#if shared.timestamp}
-                                            <div
-                                                class="flex justify-start leading-none items-center mb-1"
-                                            >
+                                        <div
+                                            class="flex justify-start leading-none items-center mb-1"
+                                        >
+                                            {#if shared.agent_id}
                                                 <AgentHeader
                                                     agent_id={shared.agent_id}
                                                     {info}
                                                 />
+                                            {/if}
+                                            {#if shared.timestamp}
                                                 <small class="px-1"
                                                     >{timeString(
                                                         shared.timestamp,
@@ -83,8 +114,8 @@
                                                 <Tooltip
                                                     >{shared.timestamp}</Tooltip
                                                 >
-                                            </div>
-                                        {/if}
+                                            {/if}
+                                        </div>
                                         <div
                                             class="hover:bg-gray-100 flex w-full rounded"
                                         >
