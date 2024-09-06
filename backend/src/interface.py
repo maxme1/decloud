@@ -65,16 +65,16 @@ class ChatInterface:
     def all(cls) -> dict[str, ChatInterface]:
         # TODO: fixme
         from .slack.interface import Slack
-        from .telegram_export.interface import Telegram
-        from .telegram_sdk.interface import TelegramAPI
+        from .telegram_export.interface import TelegramExport
+        from .telegram_sdk.interface import TelegramSDK
 
         names = []
-        if settings.telegram_api_root:
-            names.append((TelegramAPI, settings.telegram_api_root))
-        if settings.slack_root:
-            names.append((Slack, settings.slack_root))
-        if settings.telegram_root:
-            names.append((Telegram, settings.telegram_root))
+        if settings.telegram_sdk:
+            names.append((TelegramSDK, settings.telegram_sdk))
+        if settings.slack:
+            names.append((Slack, settings.slack))
+        if settings.telegram_export:
+            names.append((TelegramExport, settings.telegram_export))
 
         return {cls.name: cls(root) for cls, root in names}
 

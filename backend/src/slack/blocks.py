@@ -52,7 +52,7 @@ class Section(BlockBase):
         # TODO: accessory
         # assert not self.accessory, self.accessory
         return elements.Section(element=elements.Sequence(
-            elements=convert_elements(self.fields) if self.fields else [self.text.convert(context)]
+            elements=convert_elements(self.fields, context) if self.fields else [self.text.convert(context)]
         ))
 
 

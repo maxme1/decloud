@@ -16,7 +16,7 @@
     <div
         class="rounded aspect-square w-full h-full bg-green-300 flex text-center items-center justify-center text-white text-2xl font-bold"
     >
-        {agent.name[0].toUpperCase()}
+        {(agent.name[0] ?? "?").toUpperCase()}
     </div>
 {:else}
     <img alt={agent.name} src={agent.avatar} class="rounded w-full h-full" />

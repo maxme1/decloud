@@ -1,21 +1,11 @@
 from __future__ import annotations
 
-from functools import cache
 from typing import Literal, Union
 
-import deli
-
 from .. import elements
-from ..settings import settings
 from ..utils import NoExtra, split_into_segments
 from .mrkdwn import convert_mrkdwn
 from .utils import standard_emojis, to_unicode
-
-
-# TODO: customize by chat
-@cache
-def custom_emojis():
-    return deli.load(settings.slack_root / 'emojis.json')
 
 
 StyleStr = Literal['ordered', 'bullet', 'primary']
@@ -170,7 +160,7 @@ class Emoji(ElementBase):
         # assert not self.style, self.style
         name = self.name
         return elements.Emoji(
-            url=custom_emojis().get(name), unicode=to_unicode(self.unicode) or standard_emojis().get(name),
+            url=context.custom_emojis.get(name), unicode=to_unicode(self.unicode) or standard_emojis().get(name),
             name=name, skin_tone=self.skin_tone,
         )
 

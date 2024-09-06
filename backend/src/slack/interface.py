@@ -1,3 +1,5 @@
+from functools import cached_property
+
 import deli
 from jboc import collect
 
@@ -9,6 +11,10 @@ from .schema import AnyMessage
 
 class Slack(ChatInterface):
     name = 'slack'
+
+    @cached_property
+    def custom_emojis(self):
+        return deli.load(self.root / 'emojis.json')
 
     def load(self, x):
         return deli.load(self.root / f'messages/{x}.json')

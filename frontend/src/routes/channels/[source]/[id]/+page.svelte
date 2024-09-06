@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from "$app/stores";
     import { ApiService } from "$lib";
-    import ChannelsList from "$lib/ChannelsList.svelte";
+    import ConvList from "$lib/ConvList.svelte";
     import ChatTimeline from "$lib/messages/ChatTimeline.svelte";
     import { onMount } from "svelte";
     import { activeChannel, channels } from "$lib/store";
@@ -45,7 +45,7 @@
 </script>
 
 <div class="flex h-screen w-screen divide-x">
-    <ChannelsList channels={$channels}></ChannelsList>
+    <ConvList channels={$channels}></ConvList>
 
     {#if $activeChannel !== null}
         <div class="p-2 mx-1 w-full flex flex-col overflow-x-hidden">

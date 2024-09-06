@@ -1,16 +1,8 @@
-from functools import cache
 from typing import Union
 
-import deli
 from pydantic import model_validator
 
-from ..settings import settings
 from ..utils import NoExtra
-
-
-@cache
-def custom_emojis():
-    return {x['id']: x['emoji'] for x in deli.load(settings.telegram_api_root / 'custom-emojis.json')}
 
 
 class TypeDispatch(NoExtra):

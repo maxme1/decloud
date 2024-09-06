@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import datetime
 from typing import Literal, Union
 
-from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
+from pydantic import BaseModel, Field, TypeAdapter, field_validator
 
 from .. import elements, schema
 from ..utils import NoExtra
 from .blocks import Block
+from .mrkdwn import convert_mrkdwn
 
 
 TimeStr = str
@@ -247,8 +249,9 @@ class EventMessage(Message):
     _event: str
     _event_class: type
 
-    def get_element(self):
-        return
+    def get_element(self, context):
+        if hasattr(self, 'blocks'):
+            return elements.Sequence.wrap([x.convert(context) for x in self.blocks])
 
     def kwargs(self):
         return {}
@@ -261,7 +264,6 @@ class EventMessage(Message):
         if event:
             return event
 
-        print('unknown', self.subtype)
         return self.subtype
 
     def get_event_class(self):
@@ -305,7 +307,7 @@ class ChannelTopic(EventMessage):
 
     _event = 'topic'
 
-    def get_element(self):
+    def get_element(self, context):
         return elements.Text(text=self.topic)
 
 
@@ -315,7 +317,7 @@ class ChannelPurpose(EventMessage):
 
     _event = 'topic'
 
-    def get_element(self):
+    def get_element(self, context):
         return elements.Text(text=self.purpose)
 
 
@@ -338,7 +340,7 @@ class ReminderAdd(EventMessage):
 
     _event = 'custom'
 
-    def get_element(self):
+    def get_element(self, context):
         return elements.Text(text=self.text)
 
 
@@ -388,10 +390,20 @@ class FileComment(EventMessage, FileMixin):
     user: str | None = None
     edited: Edited | None = None
 
+    _event = 'custom'
+
+    def get_element(self, context):
+        return elements.Sequence.wrap(convert_mrkdwn(self.text))
+
 
 class AppConversationJoin(EventMessage):
     subtype: Literal['app_conversation_join']
     inviter: str
+
+    _event_class = schema.Join
+
+    def kwargs(self):
+        return dict(by=self.inviter)
 
 
 class ThreadBroadcast(EventMessage, ThreadMixin):
@@ -422,20 +434,40 @@ class HuddleThread(EventMessage, ThreadMixin):
         return dict(duration=None, status=None)
 
 
-# TODO
 class Tombstone(EventMessage, Message, ThreadMixin, extra='ignore'):
     subtype: Literal['tombstone']
     hidden: bool
 
+    _event = 'custom'
+
+    def get_element(self, context):
+        return elements.Text(text='This message has been deleted.')
+
+    def kwargs(self):
+        return dict(agents=[])
+
 
 class ShRoomCreated(EventMessage):
+    class Root(NoExtra, extra='ignore'):
+        date_start: datetime.datetime
+        date_end: datetime.datetime
+        participant_history: list[str]
+
     subtype: Literal['sh_room_created']
 
     channel: str
     no_notifications: bool
     permalink: str
-    room: dict
+    room: Root
     team: str | None = None
+
+    _event_class = schema.Call
+
+    def kwargs(self):
+        return dict(
+            duration=(self.room.date_end - self.room.date_start).total_seconds(), status=None,
+            agents=self.room.participant_history,
+        )
 
 
 class ChannelCanvasUpdated(EventMessage, extra='ignore'):

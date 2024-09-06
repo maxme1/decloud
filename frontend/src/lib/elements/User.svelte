@@ -13,6 +13,8 @@
         if (found === undefined) {
             console.error(`Unknown agent ID: ${element.user_id}`);
             agent = `[Unknown @${element.user_id}]`;
+        } else if (found.name === "") {
+            agent = `@${element.user_id}`;
         } else {
             agent = `@${found.name}`;
         }

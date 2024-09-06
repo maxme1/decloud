@@ -34,7 +34,7 @@ def generate_blocks(msg: Message, context):
     name = msg.file_name or msg.title or None
     if msg.photo:
         yield Image(
-            url=context.get_context.get_file_url(msg.photo), name=name,
+            url=context.get_file_url(msg.photo), name=name,
         )
 
     thumbnail = context.get_file_url(msg.thumbnail)
@@ -52,13 +52,13 @@ def generate_blocks(msg: Message, context):
             else:
                 yield Video(
                     url=url, thumbnail=thumbnail, name=name,
-                    size=None if url is None else (settings.telegram_root / msg.file).stat().st_size,
+                    size=None if url is None else (settings.telegram_export / msg.file).stat().st_size,
                 )
 
         case 'video_file' | 'video_message':
             yield Video(
                 url=url, thumbnail=thumbnail, name=name,
-                size=None if url is None else (settings.telegram_root / msg.file).stat().st_size,
+                size=None if url is None else (settings.telegram_export / msg.file).stat().st_size,
             )
 
         case 'audio_file' | 'voice_message':

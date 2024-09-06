@@ -3,12 +3,11 @@ from __future__ import annotations
 import multimethod
 from jboc import collect
 
-from .attachments import convert_attachments, convert_files
-from .elements import custom_emojis
-from .schema import BotMessage, EventMessage, ThreadBroadcast, UserMessage
-from .utils import standard_emojis, to_unicode
 from ..elements import EmojiBase
 from ..schema import AgentMessage, Reaction
+from .attachments import convert_attachments, convert_files
+from .schema import BotMessage, EventMessage, ThreadBroadcast, UserMessage
+from .utils import standard_emojis, to_unicode
 
 
 @multimethod.multimethod
@@ -19,7 +18,7 @@ def convert(msg, context):
 @convert.register
 def convert(msg: UserMessage | BotMessage | ThreadBroadcast, context):
     thread = get_thread(msg.replies, msg, context)
-    reactions = get_reactions(msg)
+    reactions = get_reactions(msg, context)
 
     elements = [x.convert(context) for x in msg.blocks]
     shared = []
@@ -43,10 +42,10 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast, context):
 def convert(msg: EventMessage, context):
     kwargs = dict(agents=[msg.user] if msg.user else [])
     kwargs.update(msg.kwargs())
-    element = msg.get_element()
+    element = msg.get_element(context)
     return msg.get_event_class()(
         id=msg.ts, timestamp=msg.ts, thread=get_thread(getattr(msg, 'replies', []), msg, context),
-        event=msg.get_event(), reactions=get_reactions(msg), **kwargs,
+        event=msg.get_event(), reactions=get_reactions(msg, context), **kwargs,
         elements=[element] if element is not None else [],
     )
 
@@ -59,14 +58,14 @@ def get_thread(thread, msg, context):
 
 
 @collect
-def get_reactions(msg):
+def get_reactions(msg, context):
     for reaction in msg.reactions:
         reaction_name, *tone = reaction.name.split('::')
         yield Reaction(
             emoji=EmojiBase(
                 name=reaction_name, unicode=to_unicode(standard_emojis().get(reaction_name)),
                 # TODO: skin
-                url=custom_emojis().get(reaction_name), skin_tone=None,
+                url=context.custom_emojis.get(reaction_name), skin_tone=None,
             ),
             users=reaction.users
         )

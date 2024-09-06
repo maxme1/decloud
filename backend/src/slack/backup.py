@@ -24,7 +24,7 @@ def slack(storage: Path):
 
 def update(client: WebClient, storage: Path):
     update_conversations = update_messages = update_users = update_files = True
-    update_messages = False
+    # update_messages = False
 
     conversations_path = storage / 'conversations.json'
     conversations = load_backup(conversations_path)

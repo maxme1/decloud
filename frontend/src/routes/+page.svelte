@@ -1,5 +1,5 @@
 <script lang="ts">
-    import ChannelsList from "$lib/ChannelsList.svelte";
+    import ChannelsList from "$lib/ConvList.svelte";
     import { onMount } from "svelte";
     import { channels } from "$lib/store";
     import { ApiService } from "$lib";

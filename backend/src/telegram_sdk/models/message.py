@@ -7,7 +7,7 @@ from pydantic import BeforeValidator
 
 from ...elements import EmojiBase
 from ...schema import AgentMessage, Reaction, Shared
-from ..utils import TypeDispatch, custom_emojis
+from ..utils import TypeDispatch
 from .content import ContentBase
 from .events import SystemEvent
 from .sender import Sender, SenderChat
@@ -63,10 +63,11 @@ class Message(TypeDispatch):
                     emoji = reaction.type.emoji
                 else:
                     # TODO
-                    emoji = custom_emojis().get(reaction.type.custom_emoji_id, reaction.type.custom_emoji_id)
+                    emoji = context.custom_emojis.get(reaction.type.custom_emoji_id, reaction.type.custom_emoji_id)
 
                 reactions.append(Reaction(
                     emoji=EmojiBase(unicode=emoji, name=None, skin_tone=None, url=None),
+                    # TODO
                     users=[''] * reaction.total_count,
                 ))
 

@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { ChatInfo } from "$lib";
     import type { Channel } from "$lib/client";
+    import { channels } from "$lib/store";
 
     export let element: Channel;
     export let info: ChatInfo;
@@ -9,7 +10,7 @@
     if (element.channel_id === null) {
         channel = "[Unknown]";
     } else {
-        const found = info.channels.find(
+        const found = $channels.find(
             (channel) => channel.id === element.channel_id,
         );
         if (found === undefined) {

@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from functools import partial
 from typing import Literal, Union
 
 from ... import elements
-from ..utils import TypeDispatch, custom_emojis
+from ..utils import TypeDispatch
 
 
 class FormattedText(TypeDispatch):
@@ -49,40 +48,55 @@ class FormattedText(TypeDispatch):
                 raise NotImplementedError(entity)
 
     def convert(self):
-        # split into entities
-        groups = defaultdict(list)
-        for entity in self.entities:
-            groups[entity.offset].append(entity)
-        groups = sorted(groups.items())
-        groups = [
-            (offset, max(offset + x.length for x in entities), sorted(entities, key=lambda x: x.length))
-            for offset, entities in groups
-        ]
-        # FIXME
-        # validate
-        for a, b in zip(groups, groups[1:]):
-            assert a[1] <= b[0]
+        # group nested entities
+        groups = []
+        for entity in sorted(self.entities, key=lambda x: -x.length):
+            entity_start, entity_stop = entity.offset, entity.offset + entity.length
+            for group in groups:
+                start, stop = group[:2]
+                if start <= entity_start < stop or start < entity_stop <= stop:
+                    if start <= entity_start and entity_stop <= stop:
+                        group[0] = entity_start
+                        group[1] = entity_stop
+                        group[2].append(entity)
+                        break
+                    else:
+                        raise ValueError('overlapping entities', entity, group)
 
-        start = 0
-        parts = []
-        for offset, end, entities in groups:
-            prefix = self.text[start:offset]
+            else:
+                groups.append([entity_start, entity_stop, [entity]])
+
+        # merge the groups
+        merged = []
+        for _, _, group in sorted(groups, key=lambda x: x[0]):
+            group = group[::-1]
+            entity = group[0]
+            start, stop = entity.offset, entity.offset + entity.length
+
+            wrapped = self._dispatch(entity.type, elements.Text(text=self.text[start:stop]), start, stop)
+            for entity in group[1:]:
+                begin, end = entity.offset, entity.offset + entity.length
+                pieces = []
+                if begin != start:
+                    pieces.append(elements.Text(text=self.text[start:begin]))
+                pieces.append(wrapped)
+                if end != stop:
+                    pieces.append(elements.Text(text=self.text[end:stop]))
+
+                wrapped = elements.Sequence.wrap(pieces)
+                wrapped = self._dispatch(entity.type, wrapped, begin, end)
+                start, stop = begin, end
+
+            merged.append((start, stop, wrapped))
+
+        # deal with text in between
+        start, parts = 0, []
+        for begin, end, entity in merged:
+            prefix = self.text[start:begin]
             if prefix:
                 parts.append(elements.Text(text=prefix))
 
-            entity = entities[0]
-            start = offset
-            stop = offset + entity.length
-            wrapped = self._dispatch(entity.type, elements.Text(text=self.text[start:stop]), start, stop)
-            for entity in entities[1:]:
-                if entity.offset != stop:
-                    wrapped = elements.Sequence(elements=[
-                        wrapped, elements.Text(text=self.text[stop:entity.offset]),
-                    ])
-                    stop = entity.offset
-                wrapped = self._dispatch(entity.type, wrapped, start, stop)
-
-            parts.append(wrapped)
+            parts.append(entity)
             start = end
 
         if start < len(self.text):

@@ -135,7 +135,7 @@
                                                 )}</small
                                             >
                                             <Tooltip
-                                                >{group[0].timestamp}</Tooltip
+                                                >{message.timestamp}</Tooltip
                                             >
                                         </div>
                                         <div class="ml-1 px-1 w-full mb-1">

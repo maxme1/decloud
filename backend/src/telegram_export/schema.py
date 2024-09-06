@@ -111,7 +111,7 @@ class Service(MessageBase):
     def _kwargs(self):
         return {}
 
-    def convert(self):
+    def convert(self, context):
         events = dict(
             phone_call='call',
         )

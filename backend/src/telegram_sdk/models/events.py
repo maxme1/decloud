@@ -3,10 +3,10 @@ from __future__ import annotations
 import datetime
 from typing import Literal
 
-from ...schema import BaseSystemMessage, SystemEventType, Call
+from ... import elements, schema
 from ..utils import TypeDispatch
 from .content import ContentBase
-from .media import MiniThumbnail, PhotoSize
+from .media import MiniThumbnail, PhotoSize, Sticker
 
 
 class SystemEvent:
@@ -15,12 +15,16 @@ class SystemEvent:
 
     @property
     def event_class(self):
-        return getattr(self, '_event_class', None) or BaseSystemMessage
+        return getattr(self, '_event_class', None) or schema.BaseSystemMessage
 
     def convert(self, context):
         return
 
-    def get_event(self) -> SystemEventType:
+    def get_event(self) -> schema.SystemEventType:
+        cls = getattr(self, '_event_class', None)
+        if cls:
+            return cls.model_fields['event'].default
+
         return getattr(self, '_event', None) or self.type_
 
     def kwargs(self, message):
@@ -40,7 +44,7 @@ class MessageCall(SystemEvent, ContentBase):
     discard_reason: Reason
 
     _event = 'call'
-    _event_class = Call
+    _event_class = schema.Call
 
     def kwargs(self, message):
         status = self.discard_reason.type_.removeprefix('callDiscardReason')
@@ -81,6 +85,11 @@ class ChatChangeTitle(SystemEvent, ContentBase):
     type_: Literal['messageChatChangeTitle']
     title: str
 
+    _event_class = schema.Rename
+
+    def kwargs(self, message):
+        return dict(name=self.title)
+
 
 class ForumTopicCreated(SystemEvent, ContentBase):
     type_: Literal['messageForumTopicCreated']
@@ -102,13 +111,22 @@ class ChatChangePhoto(SystemEvent, ContentBase):
         minithumbnail: MiniThumbnail | None = None
         animation: dict | None = None
         small_animation: dict | None = None
-        sticker: dict | None = None
+        sticker: Sticker | None = None
 
     type_: Literal['messageChatChangePhoto']
     photo: ChatPhoto
 
     def get_files(self):
-        return [size.photo for size in self.photo.sizes]
+        for size in self.photo.sizes:
+            yield size.photo
+        if self.photo.sticker:
+            yield self.photo.sticker.sticker
+
+    def convert(self, context):
+        if self.photo.sizes:
+            return elements.Image(
+                url=context.get_file_url(max(self.photo.sizes, key=lambda x: x.width).photo), name=None
+            )
 
 
 class ChatDeleteMember(SystemEvent, ContentBase):

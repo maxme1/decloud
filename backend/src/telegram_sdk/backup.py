@@ -15,8 +15,9 @@ from ..backup import app
 from ..utils import load_backup, save_backup
 from .models.chat import Chat
 from .models.media import File
-from .models.message import Message
+from .models.message import CustomEmojiReaction, Message
 from .models.sender import SenderUser
+from .models.text import TextEntityCustomEmoji
 from .models.user import User
 
 
@@ -27,14 +28,14 @@ class TgSettings(BaseSettings):
     api_id: int
     api_hash: str
     phone: str
+    encryption_key: str
     library_path: Path | None = None
     files_directory: Path | None = None
-    encryption_key: str | None = None
 
 
 @app.command()
 def telegram_sdk(storage: Path):
-    from telegram.client import Telegram
+    from telegram.client import Telegram  # noqa
 
     settings = TgSettings(_env_file=storage / '.env')
     encryption_key = settings.encryption_key
@@ -54,7 +55,7 @@ def telegram_sdk(storage: Path):
         files_directory=files_dir,
         use_message_database=False,
         tdlib_verbosity=0,
-        # device_model: str = 'python-telegram_export',
+        # device_model: str = 'python-telegram',
         # application_version: str = '0.19.0',
         # system_version: str = 'unknown',
     )
@@ -83,7 +84,7 @@ def download(client, storage):
         save_backup(chats, chats_path)
 
     # update the messages and gather files and users
-    chat_files, user_ids = defaultdict(list), set()
+    chat_files, user_ids, emoji_ids = defaultdict(list), set(), set()
     if update_messages or update_files or update_users:
         for chat in tqdm(chats, desc='Downloading messages'):
             chat = Chat.model_validate(chat)
@@ -113,6 +114,16 @@ def download(client, storage):
                     # drop bots and channels for now
                     if isinstance(chat.type, Chat.ChatTypePrivate):
                         chat_files[chat.id].extend(message.content.get_files())
+
+                    if message.interaction_info and message.interaction_info.reactions:
+                        for r in message.interaction_info.reactions.reactions:
+                            if isinstance(r.type, CustomEmojiReaction):
+                                emoji_ids.add(r.type.custom_emoji_id)
+
+                    if isinstance(message.content, TextEntityCustomEmoji):
+                        emoji_ids.add(message.content.custom_emoji_id)
+
+    # TODO: custom emojis
 
     # update the users
     users_path = storage / 'users.json'

@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from jboc import collect
 
-from .mrkdwn import convert_mrkdwn
-from .schema import Attachment, UnknownFile
 from ..elements import Context, File, Icon, Image, Link, Section, Sequence, Text
 from ..schema import Shared
 from ..utils import split_into_segments
+from .mrkdwn import convert_mrkdwn
+from .schema import Attachment, UnknownFile
 
 
 @collect
