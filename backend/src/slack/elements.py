@@ -9,7 +9,7 @@ from .. import elements
 from ..settings import settings
 from ..utils import NoExtra, split_into_segments
 from .mrkdwn import convert_mrkdwn
-from .utils import file_url, standard_emojis, to_unicode
+from .utils import standard_emojis, to_unicode
 
 
 # TODO: customize by chat
@@ -22,7 +22,7 @@ StyleStr = Literal['ordered', 'bullet', 'primary']
 Style = dict
 
 
-def convert_elements(xs: list[Element]) -> list[elements.Element]:
+def convert_elements(xs: list[Element], context) -> list[elements.Element]:
     # it turns out that quotes are spread across multiple elements
     result = []
     for is_quote, group in split_into_segments(
@@ -33,9 +33,9 @@ def convert_elements(xs: list[Element]) -> list[elements.Element]:
             for elt in group:
                 # we don't want nested quotes
                 if elt.type == 'rich_text_quote':
-                    converted.extend(convert_elements(elt.elements))
+                    converted.extend(convert_elements(elt.elements, context))
                 else:
-                    converted.append(elt.convert())
+                    converted.append(elt.convert(context))
 
             if len(converted) != 1:
                 converted = elements.Sequence(elements=converted)
@@ -43,7 +43,7 @@ def convert_elements(xs: list[Element]) -> list[elements.Element]:
                 converted = converted[0]
             result.append(elements.Quote(element=converted))
         else:
-            result.extend(x.convert() for x in group)
+            result.extend(x.convert(context) for x in group)
 
     return result
 
@@ -51,13 +51,13 @@ def convert_elements(xs: list[Element]) -> list[elements.Element]:
 class ElementBase(NoExtra):
     style: Style | None = None
 
-    def convert(self):
+    def convert(self, context):
         dump = self.model_dump()
         style = dump.pop('style', None) or {}
         assert isinstance(style, dict), (style, type(self))
 
         if 'elements' in dump:
-            dump['elements'] = convert_elements(self.elements)
+            dump['elements'] = convert_elements(self.elements, context)
 
         dump = _apply_style(dump, style)
         return dump
@@ -86,10 +86,10 @@ class RichTextElement(ElementBase):
     border: int | None = None
     offset: int | None = None
 
-    def convert(self):
+    def convert(self, context):
         assert not self.style, self.style
 
-        sequence = elements.Sequence(elements=convert_elements(self.elements))
+        sequence = elements.Sequence(elements=convert_elements(self.elements, context))
         if self.type == 'rich_text_quote':
             assert not self.indent and not self.offset, (self.indent, self.offset)
             return elements.Quote(element=sequence)
@@ -113,11 +113,11 @@ class RichTextList(ElementBase):
     offset: int | None = None
     style: StyleStr
 
-    def convert(self):
+    def convert(self, context):
         # assert not self.offset, (self.offset, self.elements)
         assert self.style in ('ordered', 'bullet'), self.style
         return elements.List(
-            elements=[x.convert() for x in self.elements],
+            elements=[x.convert(context) for x in self.elements],
             style='ordered' if self.style == 'ordered' else 'unordered',
         )
 
@@ -132,7 +132,7 @@ class PlainText(ElementBase):
     text: str
     emoji: bool
 
-    def convert(self):
+    def convert(self, context):
         # TODO: emoji?
         assert not self.style, self.style
         return elements.Text(text=self.text)
@@ -142,7 +142,7 @@ class Channel(ElementBase):
     type: Literal['channel']
     channel_id: str
 
-    def convert(self):
+    def convert(self, context):
         return _apply_style(elements.Channel(channel_id=self.channel_id, text=None), self.style)
 
 
@@ -151,7 +151,7 @@ class Mrkdwn(ElementBase):
     text: str
     verbatim: bool
 
-    def convert(self):
+    def convert(self, context):
         assert not self.style, self.style
         return elements.Sequence(elements=convert_mrkdwn(self.text))
 
@@ -166,7 +166,7 @@ class Emoji(ElementBase):
     display_url: str | None = None
     display_team_id: str | None = None
 
-    def convert(self):
+    def convert(self, context):
         # assert not self.style, self.style
         name = self.name
         return elements.Emoji(
@@ -182,7 +182,7 @@ class Link(ElementBase):
 
     unsafe: bool | None = None
 
-    def convert(self):
+    def convert(self, context):
         text = self.text
         if text is not None:
             text = elements.Text(text=text)
@@ -194,9 +194,9 @@ class Image(ElementBase):
     image_url: str
     alt_text: str | None = None
 
-    def convert(self):
+    def convert(self, context):
         assert not self.style, self.style
-        return elements.Image(url=file_url(self.image_url))
+        return elements.Image(url=context.get_file_url(self.image_url), name=self.alt_text)
 
 
 class Color(ElementBase):
@@ -213,7 +213,7 @@ class User(ElementBase):
     type: Literal['user']
     user_id: str
 
-    def convert(self):
+    def convert(self, context):
         return _apply_style(elements.User(user_id=self.user_id, element=None), self.style)
 
 
@@ -231,9 +231,9 @@ class Button(ElementBase):
     style: StyleStr | None = None
     confirm: dict | None = None
 
-    def convert(self):
+    def convert(self, context):
         dump = self.model_dump()
-        dump['text'] = self.text.convert()
+        dump['text'] = self.text.convert(context)
         return dump
 
 

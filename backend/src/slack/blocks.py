@@ -7,16 +7,15 @@ from pydantic import Field, model_validator
 from .. import elements
 from ..utils import NoExtra
 from .elements import Element, PlainText, convert_elements
-from .utils import file_url
 
 
 class BlockBase(NoExtra):
     block_id: str | None = None
 
-    def convert(self):
+    def convert(self, context):
         dump = self.model_dump(exclude={'block_id'})
         if 'elements' in dump:
-            dump['elements'] = convert_elements(self.elements)
+            dump['elements'] = convert_elements(self.elements, context)
         return dump
 
 
@@ -24,8 +23,8 @@ class RichText(BlockBase):
     type: Literal['rich_text']
     elements: list[Element]
 
-    def convert(self):
-        return elements.Sequence(elements=convert_elements(self.elements))
+    def convert(self, context):
+        return elements.Sequence(elements=convert_elements(self.elements, context))
 
 
 # TODO
@@ -49,11 +48,11 @@ class Section(BlockBase):
         assert bool(v.text) != bool(v.fields), (v.text, v.fields)
         return v
 
-    def convert(self):
+    def convert(self, context):
         # TODO: accessory
         # assert not self.accessory, self.accessory
         return elements.Section(element=elements.Sequence(
-            elements=convert_elements(self.fields) if self.fields else [self.text.convert()]
+            elements=convert_elements(self.fields) if self.fields else [self.text.convert(context)]
         ))
 
 
@@ -61,8 +60,8 @@ class Header(BlockBase):
     type: Literal['header']
     text: PlainText
 
-    def convert(self):
-        return elements.Header(element=self.text.convert())
+    def convert(self, context):
+        return elements.Header(element=self.text.convert(context))
 
 
 class Context(BlockBase):
@@ -85,8 +84,8 @@ class Image(BlockBase):
     is_animated: bool = False
     rotation: int = 0
 
-    def convert(self):
-        return elements.Image(url=file_url(self.image_url), name=self.alt_text)
+    def convert(self, context):
+        return elements.Image(url=context.get_file_url(self.image_url), name=self.alt_text)
 
 
 class Actions(BlockBase):

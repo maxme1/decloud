@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from ... import elements
 from ..utils import Subclasses, TypeDispatch
-from .media import File, MiniThumbnail, PhotoSize, Sticker, Thumbnail, file_url
+from .media import File, MiniThumbnail, PhotoSize, Sticker, Thumbnail
 from .sender import Sender
 from .text import FormattedText
 
@@ -43,7 +43,8 @@ class MessageAnimatedEmoji(ContentBase):
     def convert(self, context):
         return elements.Sticker(
             emoji=elements.Emoji(unicode=self.emoji, name=None, skin_tone=None, url=None),
-            url=file_url(self.animated_emoji.sticker.sticker), mimetype=self.animated_emoji.sticker.mimetype,
+            url=context.get_file_url(self.animated_emoji.sticker.sticker),
+            mimetype=self.animated_emoji.sticker.mimetype,
         )
 
 
@@ -69,7 +70,7 @@ class MessageAudio(ContentBase):
 
     def convert(self, context):
         return elements.Sequence(elements=[
-            elements.Audio(url=file_url(self.audio.audio), name=None, thumbnail=None),
+            elements.Audio(url=context.get_file_url(self.audio.audio), name=None, thumbnail=None),
             self.caption.convert(),
         ])
 
@@ -165,7 +166,7 @@ class MessageSticker(ContentBase):
     def convert(self, context):
         return elements.Sticker(
             emoji=elements.Emoji(unicode=self.sticker.emoji, name=None, skin_tone=None, url=None),
-            url=file_url(self.sticker.sticker), mimetype=self.sticker.mimetype,
+            url=context.get_file_url(self.sticker.sticker), mimetype=self.sticker.mimetype,
         )
 
 
@@ -189,8 +190,8 @@ class MessageVideoNote(ContentBase):
 
     def convert(self, context):
         return elements.Video(
-            url=file_url(self.video_note.video), name=None,
-            thumbnail=file_url(self.video_note.thumbnail.file) if self.video_note.thumbnail else None,
+            url=context.get_file_url(self.video_note.video), name=None,
+            thumbnail=context.get_file_url(self.video_note.thumbnail.file) if self.video_note.thumbnail else None,
             size=self.video_note.video.size,
         )
 
@@ -213,7 +214,7 @@ class MessageVoiceNote(ContentBase):
 
     def convert(self, context):
         return elements.Sequence(elements=[
-            elements.Audio(url=file_url(self.voice_note.voice), name=None, thumbnail=None),
+            elements.Audio(url=context.get_file_url(self.voice_note.voice), name=None, thumbnail=None),
             self.caption.convert(),
         ])
 
@@ -236,8 +237,9 @@ class MessageDocument(ContentBase):
 
     def convert(self, context):
         return elements.File(
-            url=file_url(self.document.document), name=self.document.file_name, mimetype=self.document.mime_type,
-            thumbnail=file_url(self.document.thumbnail.file) if self.document.thumbnail else None,
+            url=context.get_file_url(self.document.document), name=self.document.file_name,
+            mimetype=self.document.mime_type,
+            thumbnail=context.get_file_url(self.document.thumbnail.file) if self.document.thumbnail else None,
         )
 
 
@@ -278,7 +280,8 @@ class MessagePhoto(ContentBase, MediaMixin):
         return [size.photo for size in self.photo.sizes]
 
     def convert(self, context):
-        element = elements.Image(url=file_url(max(self.photo.sizes, key=lambda x: x.photo.size).photo), name=None)
+        element = elements.Image(url=context.get_file_url(max(self.photo.sizes, key=lambda x: x.photo.size).photo),
+                                 name=None)
         if self.caption:
             return elements.Sequence(elements=[element, self.caption.convert()])
         return element
@@ -309,8 +312,8 @@ class MessageVideo(ContentBase, MediaMixin):
 
     def convert(self, context):
         element = elements.Video(
-            url=file_url(self.video.video), name=self.video.file_name,
-            thumbnail=file_url(self.video.thumbnail.file) if self.video.thumbnail else None,
+            url=context.get_file_url(self.video.video), name=self.video.file_name,
+            thumbnail=context.get_file_url(self.video.thumbnail.file) if self.video.thumbnail else None,
             size=self.video.video.size,
         )
         if self.caption:
@@ -332,11 +335,11 @@ class MessageAnimation(ContentBase, MediaMixin):
     def convert(self, context):
         kind = self.animation.mime_type
         if kind == 'image/gif':
-            element = elements.Image(url=file_url(self.animation.animation), name=self.animation.file_name)
+            element = elements.Image(url=context.get_file_url(self.animation.animation), name=self.animation.file_name)
         else:
             element = elements.Video(
-                url=file_url(self.animation.animation), name=self.animation.file_name,
-                thumbnail=file_url(self.animation.thumbnail.file) if self.animation.thumbnail else None,
+                url=context.get_file_url(self.animation.animation), name=self.animation.file_name,
+                thumbnail=context.get_file_url(self.animation.thumbnail.file) if self.animation.thumbnail else None,
                 size=self.animation.animation.size,
             )
 

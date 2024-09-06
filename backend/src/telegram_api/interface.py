@@ -1,16 +1,19 @@
+from functools import cache
+
 import deli
 from jboc import collect
 
-from ..interface import Chat as MainChat, ChatInterface
+from ..interface import ChatDescription, ChatInterface
 from ..schema import Agent
 from ..settings import settings
 from .models.chat import Chat
-from .models.media import file_url, id_to_file
 from .models.message import Message
 from .models.user import User
 
 
 class TelegramAPI(ChatInterface):
+    name = 'telegram-sdk'
+
     def _get_users(self):
         return {x['id']: User.model_validate(x) for x in deli.load(settings.telegram_api_root / 'users.json')}
 
@@ -24,7 +27,7 @@ class TelegramAPI(ChatInterface):
         return Message.model_validate(msg)
 
     def convert(self, msg):
-        return msg.convert()
+        return msg.convert(self)
 
     @collect
     def gather_chats(self):
@@ -53,7 +56,7 @@ class TelegramAPI(ChatInterface):
             # if chat.id == 777000:
             #     continue
 
-            yield MainChat(id=str(chat.id), name=chat.title, source='telegramapi')
+            yield ChatDescription(id=str(chat.id), name=chat.title)
         # for chat in settings.telegram_api_root.glob('messages/*.json'):
         #     yield Chat(id=chat.stem, name=chat.stem, source='telegramapi')
         # chat = deli.load(chat)
@@ -64,12 +67,23 @@ class TelegramAPI(ChatInterface):
         return [
             Agent(
                 id=str(user.id), name=(user.first_name + ' ' + user.last_name).strip(),
-                avatar=file_url(user.profile_photo.small) if user.profile_photo else None,
+                avatar=self.get_file_url(user.profile_photo.small) if user.profile_photo else None,
                 is_bot=isinstance(user.type, User.BotUser)
             )
             for user in users.values()
         ]
 
-    def resolve(self, file):
-        absolute = settings.telegram_api_root / 'files' / id_to_file()[file]
+    def get_file_id(self, x) -> str | None:
+        file_id = x.remote.unique_id
+        if file_id not in id_to_file():
+            return
+        return file_id
+
+    def resolve(self, file_id):
+        absolute = self.root / 'files' / id_to_file()[file_id]
         return absolute, absolute.suffix
+
+
+@cache
+def id_to_file():
+    return {x['remote_uid']: x['filename'] for x in deli.load(settings.telegram_api_root / 'files/files.json')}

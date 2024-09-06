@@ -3,18 +3,13 @@ from pathlib import Path
 
 import deli
 
-from ..settings import settings
-
 
 def to_unicode(x: str | None):
     if x is None:
         return
+    # TODO: modifiers
+    x = x.split('-')[0].split(' ')[0]
     return int(x, 16).to_bytes(4, 'big').decode('utf-32-be')
-
-
-def file_url(x):
-    if x and (settings.slack_root / 'files' / x).exists():
-        return f'{settings.base_url}/files/slack/{x}'
 
 
 @cache

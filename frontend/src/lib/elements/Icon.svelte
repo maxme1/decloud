@@ -1,7 +1,6 @@
 <script lang="ts">
     import type { ChatInfo } from "$lib";
     import type { Icon as IconElement } from "$lib/client";
-    import ZoomableImage from "$lib/ZoomableImage.svelte";
     import Icon from "@iconify/svelte";
 
     export let element: IconElement;
@@ -9,7 +8,7 @@
 </script>
 
 {#if element.url}
-    <ZoomableImage src={element.url} class="h-4 m-0.5" />
+    <img src={element.url} class="h-4 m-0.5" alt={element.name ?? ""} />
 {:else}
     <Icon icon="tabler:file-x" width="1.5em" height="1.5em" class="m-0.5" />
 {/if}

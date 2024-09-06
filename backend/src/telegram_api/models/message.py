@@ -55,9 +55,8 @@ class Message(TypeDispatch):
     unread_reactions: list
     via_bot_user_id: int
 
-    def convert(self):
+    def convert(self, context):
         reactions = []
-        context = None
         if self.interaction_info and self.interaction_info.reactions:
             for reaction in self.interaction_info.reactions.reactions:
                 if isinstance(reaction.type, EmojiReaction):

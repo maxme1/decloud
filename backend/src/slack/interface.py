@@ -1,13 +1,15 @@
 import deli
 from jboc import collect
 
-from ..interface import Chat, ChatInterface
+from ..interface import ChatDescription, ChatInterface
 from ..schema import Agent
 from .convert import convert
 from .schema import AnyMessage
 
 
 class Slack(ChatInterface):
+    name = 'slack'
+
     def load(self, x):
         return deli.load(self.root / f'messages/{x}.json')
 
@@ -15,11 +17,11 @@ class Slack(ChatInterface):
         return AnyMessage.validate_python(msg)
 
     def convert(self, msg):
-        return convert(msg)
+        return convert(msg, self)
 
     def gather_chats(self):
         return [
-            Chat(id=x['id'], name=x['name'], source='slack')
+            ChatDescription(id=x['id'], name=x['name'])
             for x in sorted(deli.load(self.root / 'conversations.json'), key=lambda x: -x['updated'])
         ]
 
@@ -37,8 +39,8 @@ class Slack(ChatInterface):
             ]
             image = None
             if images:
-                # 48 is optimal
-                image = min(images, key=lambda x: abs(x - 48))
+                # 48 is optimal but larger is preferable otherwise
+                image = min(images, key=lambda x: (abs(48 - x), 48 - x))
                 image = p[f'image_{image}']
 
             yield Agent(
@@ -46,7 +48,11 @@ class Slack(ChatInterface):
                 is_bot=user['id'] == 'USLACKBOT' or user.get('is_bot', False),
             )
 
-    def resolve(self, file):
-        absolute = self.root / 'files' / file
+    def get_file_id(self, x):
+        if x and (self.root / 'files' / x).exists():
+            return x
+
+    def resolve(self, file_id):
+        absolute = self.root / 'files' / file_id
         kind = deli.load(absolute.with_suffix('.meta.json'))['mimetype']
         return absolute, kind

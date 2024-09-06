@@ -3,6 +3,7 @@
     import type { AnyMessage, Chat } from "../client";
     import type { ChatInfo } from "$lib";
     import { elementWalker } from "../utils";
+    import Icon from "@iconify/svelte";
 
     export let messages: AnyMessage[];
     export let focusedMessage: string | null;
@@ -13,6 +14,7 @@
     let element_enabled = new Set<string>();
     let event_types = new Map<string, number>();
     let event_enabled = new Set<string>();
+    let showSettings: boolean = false;
 
     $: {
         element_types = new Map<string, number>();
@@ -109,69 +111,81 @@
 </script>
 
 <div class="flex-1 min-w-0">
-    <p class="text-lg font-semibold text-gray-900 dark:text-white">
-        {channel.name}
-    </p>
-    <div class="flex">
-        {#each element_types.entries() as entry}
-            <button
-                class={"text-sm text-gray-500 dark:text-gray-400 rounded-sm p-1 m-1 " +
-                    (element_enabled.has(entry[0])
-                        ? "bg-slate-200"
-                        : "bg-slate-100")}
-                on:click={() => {
-                    if (element_enabled.has(entry[0])) {
-                        element_enabled.delete(entry[0]);
-                    } else {
-                        element_enabled.add(entry[0]);
-                    }
-                    element_enabled = new Set(element_enabled);
-                }}
-                on:contextmenu|preventDefault={() => {
-                    if (
-                        element_enabled.size == 1 &&
-                        element_enabled.has(entry[0])
-                    ) {
-                        element_enabled = new Set(element_types.keys());
-                    } else {
-                        element_enabled = new Set([entry[0]]);
-                    }
-                }}
-            >
-                {entry[0]}: {entry[1]}
-            </button>
-        {/each}
+    <div class="flex items-center">
+        <p class="text-lg font-semibold text-gray-900 dark:text-white">
+            {channel.name}
+        </p>
+        <button
+            class="cursor-pointer ml-auto"
+            on:click={() => {
+                showSettings = !showSettings;
+            }}
+        >
+            <Icon icon="tabler:settings" width="1em" height="1em" />
+        </button>
     </div>
-    <div class="flex">
-        {#each event_types.entries() as entry}
-            <button
-                class={"text-sm text-gray-500 dark:text-gray-400 rounded-sm p-1 m-1 " +
-                    (event_enabled.has(entry[0])
-                        ? "bg-slate-200"
-                        : "bg-slate-100")}
-                on:click={() => {
-                    if (event_enabled.has(entry[0])) {
-                        event_enabled.delete(entry[0]);
-                    } else {
-                        event_enabled.add(entry[0]);
-                    }
-                    event_enabled = new Set(event_enabled);
-                }}
-                on:contextmenu|preventDefault={() => {
-                    if (
-                        event_enabled.size == 1 &&
-                        event_enabled.has(entry[0])
-                    ) {
-                        event_enabled = new Set(event_types.keys());
-                    } else {
-                        event_enabled = new Set([entry[0]]);
-                    }
-                }}
-            >
-                {entry[0]}: {entry[1]}
-            </button>
-        {/each}
-    </div>
+    {#if showSettings}
+        <div class="flex">
+            {#each element_types.entries() as entry}
+                <button
+                    class={"text-sm text-gray-500 dark:text-gray-400 rounded-sm p-1 m-1 " +
+                        (element_enabled.has(entry[0])
+                            ? "bg-slate-200"
+                            : "bg-slate-100")}
+                    on:click={() => {
+                        if (element_enabled.has(entry[0])) {
+                            element_enabled.delete(entry[0]);
+                        } else {
+                            element_enabled.add(entry[0]);
+                        }
+                        element_enabled = new Set(element_enabled);
+                    }}
+                    on:contextmenu|preventDefault={() => {
+                        if (
+                            element_enabled.size == 1 &&
+                            element_enabled.has(entry[0])
+                        ) {
+                            element_enabled = new Set(element_types.keys());
+                        } else {
+                            element_enabled = new Set([entry[0]]);
+                        }
+                    }}
+                >
+                    {entry[0]}: {entry[1]}
+                </button>
+            {/each}
+        </div>
+        <div class="flex">
+            {#each event_types.entries() as entry}
+                <button
+                    class={"text-sm text-gray-500 dark:text-gray-400 rounded-sm p-1 m-1 " +
+                        (event_enabled.has(entry[0])
+                            ? "bg-slate-200"
+                            : "bg-slate-100")}
+                    on:click={() => {
+                        if (event_enabled.has(entry[0])) {
+                            event_enabled.delete(entry[0]);
+                        } else {
+                            event_enabled.add(entry[0]);
+                        }
+                        event_enabled = new Set(event_enabled);
+                    }}
+                    on:contextmenu|preventDefault={() => {
+                        if (
+                            event_enabled.size == 1 &&
+                            event_enabled.has(entry[0])
+                        ) {
+                            event_enabled = new Set(event_types.keys());
+                        } else {
+                            event_enabled = new Set([entry[0]]);
+                        }
+                    }}
+                >
+                    {entry[0]}: {entry[1]}
+                </button>
+            {/each}
+        </div>
+    {/if}
 </div>
 
 <ChatThread

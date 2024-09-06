@@ -6,19 +6,18 @@ import time
 from collections import defaultdict
 from pathlib import Path
 
-import deli
 import rich
 import typer
 from pydantic_settings import BaseSettings
 from tqdm.auto import tqdm
 
 from ..backup import app
+from ..utils import load_backup, save_backup
 from .models.chat import Chat
 from .models.media import File
 from .models.message import Message
 from .models.sender import SenderUser
 from .models.user import User
-from ..utils import load_backup, save_backup
 
 
 # https://core.telegram.org/tdlib/docs/classtd_1_1td__api_1_1_function.html
@@ -154,21 +153,17 @@ def download(client, storage):
         db = load_backup(files_db_path)
         skipped = set(load_backup(skipped_db_path))
         n_skipped = 0
-        with tqdm(
-                {x.remote.id for x in files} - {x['remote_id'] for x in db} - skipped, desc='Downloading files'
-        ) as bar:
+        present = {x[FILE_UID_KEY] for x in db} | skipped
+        with tqdm([file for file in files if get_file_uid(file) not in present], desc='Downloading files') as bar:
             try:
-                for file_id in bar:
+                for file in bar:
+                    file_id = get_file_uid(file)
                     # file ids are generated each time the client is created
                     file = File.model_validate(wait(client.call_method(
-                        'getRemoteFile', params=dict(remote_file_id=file_id)
+                        'getRemoteFile', params=dict(remote_file_id=file.remote.id)
                     )))
-                    if file.remote.id == file_id:
-                        success = _update_files_db(client, file.id, files_root, db)
-                    else:
-                        # TODO???
-                        success = False
-
+                    assert file.remote.unique_id == file_id
+                    success = _update_files_db(client, file.id, files_root, db)
                     n_skipped += not success
                     if not success:
                         bar.set_postfix_str(f'Skipped: {n_skipped}')
@@ -234,7 +229,7 @@ def _update_files_db(client, file_id, storage, db) -> bool:
             elif not (file.local.is_downloading_active or file.local.is_downloading_completed):
                 path = False
 
-    if any(x['remote_id'] == file_id for x in db):
+    if any(x[FILE_UID_KEY] == file_id for x in db):
         return True
 
     path = None
@@ -277,3 +272,10 @@ def _update_files_db(client, file_id, storage, db) -> bool:
         client.remove_update_handler('updateFile', handler)
 
     return True
+
+
+FILE_UID_KEY = 'remote_uid'
+
+
+def get_file_uid(file: File):
+    return file.remote.unique_id

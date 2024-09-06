@@ -1,32 +1,33 @@
 import deli
 from jboc import collect
 
-from ..interface import Chat, ChatInfo, ChatInterface
+from ..interface import ChatDescription, ChatInterface
 from ..schema import Agent
-from ..settings import settings
 from .convert import convert
 from .schema import AnyMessage
 
 
 class Telegram(ChatInterface):
+    name = 'telegram-export'
+
     def load(self, x):
-        return deli.load(settings.telegram_root / f'{x}.json')['messages']
+        return deli.load(self.root / f'{x}.json')['messages']
 
     def validate(self, msg):
         return AnyMessage.validate_python(msg)
 
     def convert(self, msg):
-        return convert(msg)
+        return convert(msg, self)
 
     @collect
     def gather_chats(self):
-        for chat in settings.telegram_root.glob('*.json'):
+        for chat in self.root.glob('*.json'):
             chat = deli.load(chat)
-            yield Chat(id=str(chat['id']), name=chat['name'], source='telegram')
+            yield ChatDescription(id=str(chat['id']), name=chat['name'])
 
     def gather_agents(self):
         agents = {}
-        for chat in settings.telegram_root.glob('*.json'):
+        for chat in self.root.glob('*.json'):
             chat = deli.load(chat)
             if chat['type'] == 'personal_chat':
                 agents[f'user{chat["id"]}'] = chat['name']
@@ -37,6 +38,14 @@ class Telegram(ChatInterface):
 
         return [Agent(id=x, name=u, avatar=None, is_bot=False) for x, u in agents.items()]
 
-    def resolve(self, file):
-        absolute = settings.telegram_root / 'storage' / file
+    def get_file_id(self, x):
+        if x == MISSING_FILE or not (self.root / x).exists():
+            return
+        return x.removeprefix('storage/')
+
+    def resolve(self, file_id):
+        absolute = self.root / 'storage' / file_id
         return absolute, absolute.suffix
+
+
+MISSING_FILE = '(File not included. Change data exporting settings to download.)'

@@ -1,11 +1,7 @@
 from __future__ import annotations
 
-from functools import cache
-from typing import Literal, Union
+from typing import Literal
 
-import deli
-
-from ...settings import settings
 from ..utils import Subclasses, TypeDispatch
 
 
@@ -99,20 +95,3 @@ class File(TypeDispatch):
     expected_size: int
     local: LocalFile
     remote: RemoteFile
-
-
-@cache
-def id_to_file():
-    return {x['remote_id']: x['filename'] for x in deli.load(settings.telegram_api_root / 'files/files.json')}
-
-
-def file_url(file: File | None) -> str | None:
-    if file is None:
-        return None
-
-    file_id = file.remote.id
-    if file_id not in id_to_file():
-        # print(f'File {file_id} not found')
-        return
-
-    return f'{settings.base_url}/files/telegramapi/{file_id}'

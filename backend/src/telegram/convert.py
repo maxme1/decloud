@@ -1,20 +1,19 @@
 import multimethod
 
 from ..elements import *
-from ..schema import AgentMessage, Shared, SystemMessage
+from ..schema import AgentMessage, Shared
 from ..settings import settings
 from .schema import *
-from .utils import file_url
 
 
 @multimethod.multimethod
-def convert(msg):
+def convert(msg, context):
     raise NotImplementedError(type(msg))
 
 
 @convert.register
-def convert(msg: Message):
-    elements = list(generate_blocks(msg)) + [x.convert() for x in msg.text_entities]
+def convert(msg: Message, context):
+    elements = list(generate_blocks(msg, context)) + [x.convert(context) for x in msg.text_entities]
     shared = []
     if msg.forwarded_from:
         shared.append(Shared(elements=elements, id=None, agent_id=None, timestamp=None, channel_id=None))
@@ -27,19 +26,19 @@ def convert(msg: Message):
 
 
 @convert.register
-def convert(msg: Service):
-    return msg.convert()
+def convert(msg: Service, context):
+    return msg.convert(context)
 
 
-def generate_blocks(msg: Message):
+def generate_blocks(msg: Message, context):
     name = msg.file_name or msg.title or None
     if msg.photo:
         yield Image(
-            url=file_url(msg.photo), name=name,
+            url=context.get_context.get_file_url(msg.photo), name=name,
         )
 
-    thumbnail = file_url(msg.thumbnail)
-    url = file_url(msg.file)
+    thumbnail = context.get_file_url(msg.thumbnail)
+    url = context.get_file_url(msg.file)
     match msg.media_type:
         case 'sticker':
             if msg.file.endswith('.tgs'):

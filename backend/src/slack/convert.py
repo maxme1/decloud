@@ -4,25 +4,25 @@ import multimethod
 from jboc import collect
 
 from ..elements import Context, EmojiBase, File, Icon, Image, Link, Section, Sequence, Text
-from ..schema import AgentMessage, BaseSystemMessage, Reaction, Shared, SystemMessage
+from ..schema import AgentMessage, BaseSystemMessage, Reaction, Shared
 from ..utils import split_into_segments
 from .elements import custom_emojis
 from .mrkdwn import convert_mrkdwn
 from .schema import BotMessage, EventMessage, ThreadBroadcast, UnknownFile, UserMessage
-from .utils import file_url, standard_emojis, to_unicode
+from .utils import standard_emojis, to_unicode
 
 
 @multimethod.multimethod
-def convert(msg):
+def convert(msg, context):
     raise NotImplementedError(type(msg))
 
 
 @convert.register
-def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
-    thread = get_thread(msg.replies, msg)
+def convert(msg: UserMessage | BotMessage | ThreadBroadcast, context):
+    thread = get_thread(msg.replies, msg, context)
     reactions = get_reactions(msg)
 
-    elements = [x.convert() for x in msg.blocks]
+    elements = [x.convert(context) for x in msg.blocks]
     replied = []
     shared = []
     if msg.attachments and not elements:
@@ -71,15 +71,15 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
                     if not dump['message_blocks'][0]:
                         dump.pop('message_blocks')
 
-                    content = [x.convert() for x in attachment.message_blocks[0].message.blocks]
+                    content = [x.convert(context) for x in attachment.message_blocks[0].message.blocks]
                 elif attachment.text:
                     content = [no_mrkdwn(attachment.text, 'text' in markdown)]
                 else:
                     content = []
 
                 shared.append(Shared(
-                    elements=content + convert_files(attachment.files), id=attachment.ts, agent_id=attachment.author_id,
-                    timestamp=attachment.ts, channel_id=attachment.channel_id
+                    elements=content + convert_files(attachment.files, context), id=attachment.ts,
+                    agent_id=attachment.author_id, timestamp=attachment.ts, channel_id=attachment.channel_id
                 ))
 
                 continue
@@ -146,7 +146,7 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
         )
 
     # files
-    elements.extend(convert_files(getattr(msg, 'files', [])))
+    elements.extend(convert_files(getattr(msg, 'files', []), context))
 
     return AgentMessage(
         elements=elements, id=msg.ts, agent_id=msg.user or msg.bot_id, timestamp=msg.ts,
@@ -163,7 +163,7 @@ def no_mrkdwn(text, unpack):
 
 
 @convert.register
-def convert(msg: EventMessage):
+def convert(msg: EventMessage, context):
     events = dict(
         huddle_thread='call',
         channel_join='join',
@@ -182,17 +182,17 @@ def convert(msg: EventMessage):
     #     print('missing subtype', msg.subtype)
 
     return BaseSystemMessage(
-        id=msg.ts, elements=elements, timestamp=msg.ts, thread=get_thread(getattr(msg, 'replies', []), msg),
+        id=msg.ts, elements=elements, timestamp=msg.ts, thread=get_thread(getattr(msg, 'replies', []), msg, context),
         event=events.get(msg.subtype, msg.subtype),
         reactions=get_reactions(msg), agents=[msg.user] if msg.user else [],
     )
 
 
-def get_thread(thread, msg):
+def get_thread(thread, msg, context):
     if thread:
         assert thread[0].ts == msg.ts
         thread = thread[1:]
-    return list(map(convert, thread))
+    return [convert(t, context) for t in thread]
 
 
 @collect
@@ -210,20 +210,22 @@ def get_reactions(msg):
 
 
 @collect
-def convert_files(files):
+def convert_files(files, context):
     for is_image, group in split_into_segments(
             files, lambda x: hasattr(x, 'mimetype') and x.mimetype.startswith('image/')
     ):
         if is_image:
-            yield Sequence.wrap([Image(url=file_url(file.id), name=file.name) for file in group])
+            yield Sequence.wrap([Image(url=context.get_file_url(file.id), name=file.name) for file in group])
 
         else:
             for file in group:
                 if isinstance(file, UnknownFile):
-                    yield File(url=file_url(file.id), name=None, mimetype=None, thumbnail=None)
+                    yield File(url=context.get_file_url(file.id), name=None, mimetype=None, thumbnail=None)
 
                 elif file.mode == 'tombstone':
                     yield File(url=None, name=None, mimetype=None, thumbnail=None)
 
                 else:
-                    yield File(url=file_url(file.id), name=file.name, mimetype=file.mimetype, thumbnail=None)
+                    yield File(
+                        url=context.get_file_url(file.id), name=file.name, mimetype=file.mimetype, thumbnail=None
+                    )

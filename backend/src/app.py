@@ -35,7 +35,7 @@ def get_agents(interface):
 async def chats() -> list[Chat]:
     result = []
     for interface in ChatInterface.all().values():
-        result.extend(interface.gather_chats())
+        result.extend(interface.get_chats())
 
     return result
 

@@ -6,7 +6,8 @@ from pathlib import Path
 import deli
 from tqdm.auto import tqdm
 
-from .schema import MISSING_FILE, AnyMessage
+from .interface import MISSING_FILE
+from .schema import AnyMessage
 
 
 def transfer(path, storage):

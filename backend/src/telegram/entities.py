@@ -2,10 +2,8 @@ from typing import Literal, Union
 
 from .. import elements
 from ..utils import NoExtra
-from .utils import file_url
 
 
-MISSING_FILE = '(File not included. Change data exporting settings to download.)'
 StoredFile = str
 
 
@@ -16,7 +14,7 @@ class PlainLike(NoExtra):
     ]
     text: str
 
-    def convert(self):
+    def convert(self, context):
         assert type(self) is PlainLike, self
         text = self.text
         wrapped = elements.Text(text=text)
@@ -44,7 +42,7 @@ class BlockQuote(PlainLike):
     type: Literal['blockquote']
     collapsed: bool | None = None
 
-    def convert(self):
+    def convert(self, context):
         # TODO: collapsed
         return elements.Quote(element=elements.Text(text=self.text))
 
@@ -53,7 +51,7 @@ class Pre(PlainLike):
     type: Literal['pre']
     language: str
 
-    def convert(self):
+    def convert(self, context):
         return elements.Code(element=elements.Text(text=self.text), language=self.language)
 
 
@@ -61,7 +59,7 @@ class TextLink(PlainLike):
     type: Literal['text_link']
     href: str
 
-    def convert(self):
+    def convert(self, context):
         return elements.Link(url=self.href, element=elements.Text(text=self.text))
 
 
@@ -69,7 +67,7 @@ class MentionName(PlainLike):
     type: Literal['mention_name']
     user_id: int
 
-    def convert(self):
+    def convert(self, context):
         return elements.User(user_id=str(self.user_id), element=self.text)
 
 
@@ -77,8 +75,8 @@ class CustomEmoji(PlainLike):
     type: Literal['custom_emoji']
     document_id: StoredFile
 
-    def convert(self):
-        return elements.Emoji(name=None, url=file_url(self.document_id), skin_tone=None, unicode=self.text)
+    def convert(self, context):
+        return elements.Emoji(name=None, url=context.get_file_url(self.document_id), skin_tone=None, unicode=self.text)
 
 
 type TextEntity = Union[PlainLike, *PlainLike.__subclasses__()]

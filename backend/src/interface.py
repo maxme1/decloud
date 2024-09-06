@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Iterable
 
 from pydantic import BaseModel
 
@@ -12,6 +13,8 @@ _registry = {}
 
 
 class ChatInterface:
+    name: str
+
     def __init__(self, root: str | Path):
         self.root = Path(root)
 
@@ -27,42 +30,63 @@ class ChatInterface:
     def gather_agents(self):
         pass
 
-    def gather_chats(self):
+    def gather_chats(self) -> Iterable[ChatDescription]:
         pass
 
-    def resolve(self, file):
+    def get_chats(self) -> list[Chat]:
+        return [Chat(**x.model_dump(), source=self.name) for x in self.gather_chats()]
+
+    # files handling
+
+    def get_file_url(self, x):
+        if x is None:
+            return
+
+        fid = self.get_file_id(x)
+        if fid is not None:
+            return f'{settings.base_url}/files/{self.name}/{fid}'
+
+    def get_file_id(self, x) -> str | None:
         pass
+
+    def resolve(self, file_id):
+        pass
+
+    # subclasses
 
     def __init_subclass__(cls, **kwargs):
-        _registry[cls.__name__.lower()] = cls
+        _registry[cls.name] = cls
 
     @classmethod
     def find(cls, name) -> ChatInterface:
         return cls.all()[name]
 
     @classmethod
-    def all(cls):
+    def all(cls) -> dict[str, ChatInterface]:
         # TODO: fixme
-        from .slack.interface import Slack  # noqa
-        from .telegram.interface import Telegram  # noqa
-        from .telegram_api.interface import TelegramAPI  # noqa
+        from .slack.interface import Slack
+        from .telegram.interface import Telegram
+        from .telegram_api.interface import TelegramAPI
 
         names = []
         if settings.telegram_api_root:
-            names.append(('telegramapi', settings.telegram_api_root))
+            names.append((TelegramAPI, settings.telegram_api_root))
         if settings.slack_root:
-            names.append(('slack', settings.slack_root))
+            names.append((Slack, settings.slack_root))
         if settings.telegram_root:
-            names.append(('telegram', settings.telegram_root))
+            names.append((Telegram, settings.telegram_root))
 
-        return {name: _registry[name](root) for name, root in names}
+        return {cls.name: cls(root) for cls, root in names}
 
 
 class ChatInfo(BaseModel):
     agents: list[Agent]
 
 
-class Chat(BaseModel):
+class ChatDescription(BaseModel):
     id: str
     name: str
+
+
+class Chat(ChatDescription):
     source: str
