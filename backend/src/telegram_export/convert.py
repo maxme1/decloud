@@ -21,7 +21,7 @@ def convert(msg: Message, context):
 
     return AgentMessage(
         id=str(msg.id), timestamp=msg.date_unixtime, thread=[], elements=elements,
-        reactions=[], reply_to=[], shared=shared, agent_id=msg.from_id, edited=msg.edited_unixtime,
+        reactions=[], shared=shared, agent_id=msg.from_id, edited=msg.edited_unixtime,
     )
 
 

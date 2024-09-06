@@ -11,13 +11,6 @@ class ElementBase(NoExtra):
 
 # legacy
 
-# TODO
-class CallElement(ElementBase, extra='ignore'):
-    type: Literal['call'] = 'call'
-    # call_id: str
-    # api_decoration_available: bool
-    # call: dict
-
 
 class Header(ElementBase):
     type: Literal['header'] = 'header'

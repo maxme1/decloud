@@ -6,7 +6,7 @@ from typing import Annotated, Literal, Union
 from pydantic import BeforeValidator
 
 from ...elements import EmojiBase
-from ...schema import AgentMessage, BaseSystemMessage, Reaction, Shared
+from ...schema import AgentMessage, Reaction, Shared
 from ..utils import TypeDispatch, custom_emojis
 from .content import ContentBase
 from .events import SystemEvent
@@ -81,7 +81,7 @@ class Message(TypeDispatch):
             kwargs.update(self.content.kwargs(self))
             kwargs['agents'] = list(map(str, kwargs['agents']))
             element = self.content.convert(context)
-            return BaseSystemMessage(
+            return self.content.event_class(
                 id=str(self.id), timestamp=self.date, thread=[], elements=[element] if element else [],
                 reactions=reactions, event=self.content.get_event(), **kwargs,
             )
@@ -115,7 +115,7 @@ class Message(TypeDispatch):
 
         return AgentMessage(
             id=str(self.id), timestamp=self.date, thread=[], elements=elements,
-            reactions=reactions, shared=shared, edited=self.edit_date, agent_id=sender, reply_to=[],
+            reactions=reactions, shared=shared, edited=self.edit_date, agent_id=sender,
         )
 
 

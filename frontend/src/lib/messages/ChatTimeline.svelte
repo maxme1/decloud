@@ -4,6 +4,7 @@
     import type { ChatInfo } from "$lib";
     import { elementWalker } from "../utils";
     import Icon from "@iconify/svelte";
+    import ConvLogo from "$lib/ConvLogo.svelte";
 
     export let messages: AnyMessage[];
     export let focusedMessage: string | null;
@@ -112,7 +113,8 @@
 
 <div class="flex-1 min-w-0">
     <div class="flex items-center">
-        <p class="text-lg font-semibold text-gray-900 dark:text-white">
+        <ConvLogo conv={channel} />
+        <p class="text-lg font-semibold text-gray-900 dark:text-white mx-1">
             {channel.name}
         </p>
         <button

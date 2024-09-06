@@ -4,16 +4,24 @@
     import Thread from "./Thread.svelte";
 
     import { type ChatInfo } from "$lib";
-    import { Badge } from "flowbite-svelte";
     import Elements from "../elements/Elements.svelte";
     import Reactions from "./Reactions.svelte";
+    import SystemAgents from "./SystemAgents.svelte";
     import Call from "../events/Call.svelte";
+    import Join from "../events/Join.svelte";
+    import Leave from "../events/Join.svelte";
+    import Rename from "$lib/events/Rename.svelte";
 
     export let message: SystemMessage;
     export let info: ChatInfo;
 
-    const users = new Set(["join", "leave", "archive", "create"]);
-    const components = new Map([["call", Call]]);
+    const users = new Set(["archive", "create"]);
+    const components = new Map<string, any>([
+        ["call", Call],
+        ["join", Join],
+        ["leave", Leave],
+        ["rename", Rename],
+    ]);
 </script>
 
 <div class="flex flex-col">
@@ -32,16 +40,8 @@
                     ></svelte:component>
                 {:else if users.has(message.event)}
                     <div>
-                        {#each message.agents as agent}
-                            <User
-                                element={{
-                                    user_id: agent,
-                                    type: "user",
-                                    element: null,
-                                }}
-                                {info}
-                            />
-                        {/each}
+                        <SystemAgents agents={message.agents} {info}
+                        ></SystemAgents>
                     </div>
                 {:else}
                     {message.event}

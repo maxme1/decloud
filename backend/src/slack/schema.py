@@ -4,6 +4,7 @@ from typing import Literal, Union
 
 from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
 
+from .. import elements, schema
 from ..utils import NoExtra
 from .blocks import Block
 
@@ -243,15 +244,48 @@ class EventMessage(Message):
     subtype: str
     team: str | None = None
 
+    _event: str
+    _event_class: type
+
+    def get_element(self):
+        return
+
+    def kwargs(self):
+        return {}
+
+    def get_event(self):
+        cls = getattr(self, '_event_class', None)
+        if cls:
+            return cls.model_fields['event'].default
+        event = getattr(self, '_event', None)
+        if event:
+            return event
+
+        print('unknown', self.subtype)
+        return self.subtype
+
+    def get_event_class(self):
+        return getattr(self, '_event_class', None) or schema.BaseSystemMessage
+
 
 class ChannelJoin(EventMessage):
     subtype: Literal['channel_join', 'group_join']
     team: str | None = None
     inviter: str | None = None
 
+    _event_class = schema.Join
+
+    def kwargs(self):
+        return dict(by=self.inviter)
+
 
 class ChannelLeave(EventMessage):
     subtype: Literal['channel_leave', 'group_leave']
+
+    _event_class = schema.Leave
+
+    def kwargs(self):
+        return dict(by=None)
 
 
 class ChannelName(EventMessage):
@@ -259,19 +293,36 @@ class ChannelName(EventMessage):
     old_name: str
     name: str
 
+    _event_class = schema.Rename
+
+    def kwargs(self):
+        return dict(name=self.name)
+
 
 class ChannelTopic(EventMessage):
     subtype: Literal['channel_topic', 'group_topic']
     topic: str
+
+    _event = 'topic'
+
+    def get_element(self):
+        return elements.Text(text=self.topic)
 
 
 class ChannelPurpose(EventMessage):
     subtype: Literal['channel_purpose', 'group_purpose']
     purpose: str
 
+    _event = 'topic'
+
+    def get_element(self):
+        return elements.Text(text=self.purpose)
+
 
 class ChannelArchive(EventMessage):
     subtype: Literal['channel_archive']
+
+    _event = 'archive'
 
 
 class ChannelToPrivate(EventMessage):
@@ -284,6 +335,11 @@ class ChannelUnarchive(EventMessage):
 
 class ReminderAdd(EventMessage):
     subtype: Literal['reminder_add']
+
+    _event = 'custom'
+
+    def get_element(self):
+        return elements.Text(text=self.text)
 
 
 class FileMixin(NoExtra):
@@ -303,10 +359,27 @@ class PinnedItem(EventMessage, FileMixin):
     comment: str | None = None
 
 
-class BotEvent(EventMessage):
-    subtype: Literal['bot_add', 'bot_disable', 'bot_remove', 'bot_enable']
+class BotEventMixin(NoExtra):
     bot_id: str
     bot_link: str | None = None
+
+
+class BotRemove(EventMessage, BotEventMixin):
+    subtype: Literal['bot_disable', 'bot_remove']
+
+    _event_class = schema.Leave
+
+    def kwargs(self):
+        return dict(agents=[self.bot_id], by=self.user)
+
+
+class BotAdd(EventMessage, BotEventMixin):
+    subtype: Literal['bot_add', 'bot_enable']
+
+    _event_class = schema.Join
+
+    def kwargs(self):
+        return dict(by=self.user, agents=[self.bot_id])
 
 
 class FileComment(EventMessage, FileMixin):
@@ -342,6 +415,11 @@ class ReplyBroadcast(EventMessage):
 class HuddleThread(EventMessage, ThreadMixin):
     subtype: Literal['huddle_thread']
     canvas_update_section_ids: list[str] = Field(default_factory=list)
+
+    _event_class = schema.Call
+
+    def kwargs(self):
+        return dict(duration=None, status=None)
 
 
 # TODO

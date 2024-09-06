@@ -75,22 +75,6 @@ class MessageAudio(ContentBase):
         ])
 
 
-class MessageCall(ContentBase):
-    class Reason(TypeDispatch):
-        type_: Literal[
-            'callDiscardReasonHungUp', 'callDiscardReasonMissed', 'callDiscardReasonDisconnected',
-            'callDiscardReasonDeclined',
-        ]
-
-    type_: Literal['messageCall']
-    is_video: bool
-    duration: int
-    discard_reason: Reason
-
-    def convert(self, context):
-        return elements.CallElement()
-
-
 class MessageContact(ContentBase):
     class Contact(TypeDispatch):
         type_: Literal['contact']

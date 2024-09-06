@@ -12,7 +12,7 @@ from .models.user import User
 
 
 class TelegramAPI(ChatInterface):
-    name = 'telegram_export-sdk'
+    name = 'telegram-sdk'
 
     def _get_users(self):
         return {x['id']: User.model_validate(x) for x in deli.load(settings.telegram_api_root / 'users.json')}
@@ -31,7 +31,6 @@ class TelegramAPI(ChatInterface):
 
     @collect
     def gather_chats(self):
-        users = self._get_users()
         for chat in sorted(
                 deli.load(settings.telegram_api_root / 'chats.json'),
                 key=lambda x: x.get('last_message', {}).get('date', 0), reverse=True,

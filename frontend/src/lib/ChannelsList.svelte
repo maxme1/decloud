@@ -1,5 +1,7 @@
 <script lang="ts">
     import type { Chat } from "./client";
+    import { activeChannel } from "./store";
+    import ConvLogo from "./ConvLogo.svelte";
 
     export let channels: Chat[];
 
@@ -9,16 +11,20 @@
     }
 </script>
 
-<div class="overflow-y-auto p-2 m-1">
+<div class="overflow-y-auto p-1 m-1">
     <ul>
         {#each channels as channel}
             <li class="w-full">
                 <a
                     href="/channels/{channel.source}/{channel.id}"
-                    class={"inline-block text-gray-500 dark:text-gray-400 px-2 hover:bg-gray-200 rounded-md p-1 w-full text-left text-nowrap overflow-clip text-clip " +
-                        (null === channel ? "bg-gray-300" : "")}
+                    class="text-gray-500 dark:text-gray-400 hover:bg-gray-200 rounded-md py-1 px-0.5 w-full text-left flex items-center text-nowrap text-clip"
+                    class:bg-gray-300={channel.id ===
+                        $activeChannel?.channel.id}
                 >
-                    <small class="w-full">{clipLongName(channel.name)}</small>
+                    <div class="w-4 h-4 mr-1">
+                        <ConvLogo conv={channel} />
+                    </div>
+                    <small>{clipLongName(channel.name)}</small>
                 </a>
             </li>
         {/each}

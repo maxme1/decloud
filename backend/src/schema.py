@@ -7,20 +7,7 @@ from .elements import Element, EmojiBase
 from .utils import NoExtra
 
 
-class AttachmentBase(NoExtra):
-    pass
-
-
-class RemovedAttachment(AttachmentBase):
-    type: Literal['removed'] = 'removed'
-
-
-class URLAttachment(AttachmentBase):
-    type: Literal['image', 'other']
-    url: str | None
-
-
-type Attachment = Union[*AttachmentBase.__subclasses__()]
+AgentID = str
 
 
 class Reaction(NoExtra):
@@ -38,13 +25,13 @@ class Base(NoExtra):
 
 
 class Agent(NoExtra):
-    id: str
+    id: AgentID
     name: str
     avatar: str | None
     is_bot: bool
 
 
-SystemEventType = Literal['join', 'leave', 'purpose', 'create', 'archive'] | str
+SystemEventType = Literal['topic', 'create', 'archive'] | str
 
 
 class BaseSystemMessage(Base):
@@ -56,6 +43,22 @@ class BaseSystemMessage(Base):
 class Call(BaseSystemMessage):
     event: Literal['call'] = 'call'
     duration: float | None
+    status: Literal['missed', 'declined', 'hung_up', 'disconnected'] | None
+
+
+class Join(BaseSystemMessage):
+    event: Literal['join'] = 'join'
+    by: AgentID | None
+
+
+class Leave(BaseSystemMessage):
+    event: Literal['leave'] = 'leave'
+    by: AgentID | None
+
+
+class Rename(BaseSystemMessage):
+    event: Literal['rename'] = 'rename'
+    name: str
 
 
 class Shared(NoExtra):
@@ -74,7 +77,6 @@ class AgentMessage(Base):
     edited: datetime.datetime | None
 
     shared: list[Shared]
-    reply_to: list[str]
 
 
 type SystemMessage = Union[BaseSystemMessage, *BaseSystemMessage.__subclasses__()]

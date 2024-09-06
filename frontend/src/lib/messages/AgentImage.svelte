@@ -8,14 +8,6 @@
 
     let agent = null;
     $: agent = getAgent(agent_id, info);
-
-    const icons = new Map([
-        ["call", "tabler:phone-call"],
-        ["join", "tabler:door-enter"],
-        ["leave", "tabler:door-exit"],
-        ["purpose", "tabler:target"],
-        ["archive", "tabler:archive"],
-    ]);
 </script>
 
 {#if agent === null}

@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 from typing import Literal
 
-from ...schema import SystemEventType
+from ...schema import BaseSystemMessage, SystemEventType, Call
 from ..utils import TypeDispatch
 from .content import ContentBase
 from .media import MiniThumbnail, PhotoSize
@@ -11,6 +11,11 @@ from .media import MiniThumbnail, PhotoSize
 
 class SystemEvent:
     _event: str | None
+    _event_class: type
+
+    @property
+    def event_class(self):
+        return getattr(self, '_event_class', None) or BaseSystemMessage
 
     def convert(self, context):
         return
@@ -20,6 +25,28 @@ class SystemEvent:
 
     def kwargs(self, message):
         return {}
+
+
+class MessageCall(SystemEvent, ContentBase):
+    class Reason(TypeDispatch):
+        type_: Literal[
+            'callDiscardReasonHungUp', 'callDiscardReasonMissed', 'callDiscardReasonDisconnected',
+            'callDiscardReasonDeclined',
+        ]
+
+    type_: Literal['messageCall']
+    is_video: bool
+    duration: int
+    discard_reason: Reason
+
+    _event = 'call'
+    _event_class = Call
+
+    def kwargs(self, message):
+        status = self.discard_reason.type_.removeprefix('callDiscardReason')
+        if status == 'HungUp':
+            status = 'hung_up'
+        return dict(duration=self.duration, status=status.lower())
 
 
 class ChatAddMembers(SystemEvent, ContentBase):
