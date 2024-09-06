@@ -1,41 +1,37 @@
 # What is this?
 
-This is a minimalistic browser of your local [backups of Telegram chats](https://telegram.org/blog/export-and-more).
+This is a minimalistic manager for you local backups of
 
-A live version is available [here](https://maxme1.github.io/chat-browser/). I created a generic chat as an example.
+- [Telegram chats exports](https://telegram.org/blog/export-and-more), through the Telegram's builtin export feature
+- Telegram full backups through its Client SDK
+- Slack full backups though its API
 
 # What can it do?
 
 Pretty much everything except sending messages:
 
+- backup your chats and keep them up to date
 - view your chats and messages
-- filter messages by text and content type (media, message types, authors etc.)
 - display media content (images, videos, audio, files)
-- show additional statistics, such as monthly/weekly/daily activity charts
 
 # How to use it?
 
-1. Export your chats from Telegram. See [this guide](https://telegram.org/blog/export-and-more) for details. If your
-   chats contain sensitive information, make sure to keep the exported data in a secure location, such as an encrypted
-   drive.
-2. The backups will need a bit of processing. Choose a storage folder for the processed chats. Mine
-   is `path/to/storage/folder`.
-3. Run
-   ```shell
-   python normalizer/main.py path/to/storage/folder path/to/exported/chat/folder
-   ```
-   for each chat you backed up
-4. Run the file server
-   ```shell
-   cd path/to/storage/folder 
-   npx serve --cors
-   ```
-5. Run the frontend
-   ```shell
-   cd frontend
-   npm install
-   npm run dev
-   ```   
-6. Go to `localhost:5173` in your browser
+## Telegram SDK
 
-It's not the most user-friendly setup. I hope to simplify it in the future.
+1. Create a new folder which will contain your Telegram backup. It is highly recommended to use an encrypted drive for
+   this. I'll use the `/backups/telegram-sdk/` folder in this example.
+2. Create a `.env` file in the `/backups/telegram-sdk/` folder with the following variables:
+   `API_ID, API_HASH` - the credentials
+   for [your Telegram app](https://core.telegram.org/api/obtaining_api_id#obtaining-api-id), `PHONE` - the phone number
+   associated with the Telegram account you want to back up. E.g.:
+   ```shell
+   API_ID=123456
+   API_HASH=abcdef1234567890abcdef1234567890
+   PHONE=+1234567890
+   ```
+3. Install the dependencies and run the backup script:
+   ```shell
+   cd backend
+   pip install -r requirements.txt -r dev-requirements.txt
+   python backup.py telegram-sdk /backups/telegram-sdk/
+   ```

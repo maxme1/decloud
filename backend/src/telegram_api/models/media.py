@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+from functools import cache
 from typing import Literal, Union
 
-from ..utils import TypeDispatch
+import deli
+
+from ...settings import settings
+from ..utils import Subclasses, TypeDispatch
 
 
 class Sticker(TypeDispatch):
@@ -28,10 +32,18 @@ class Sticker(TypeDispatch):
     height: int
     emoji: str
     format: Format
-    full_type: Union[*TypeBase.__subclasses__()]
+    full_type: Subclasses[TypeBase]
     thumbnail: Thumbnail
     sticker: File
     outline: list
+
+    @property
+    def mimetype(self):
+        return {
+            'stickerFormatWebp': 'image/webp',
+            'stickerFormatWebm': 'video/webm',
+            'stickerFormatTgs': 'video/tgs',
+        }[self.format.type_]
 
 
 class Thumbnail(TypeDispatch):
@@ -87,3 +99,20 @@ class File(TypeDispatch):
     expected_size: int
     local: LocalFile
     remote: RemoteFile
+
+
+@cache
+def id_to_file():
+    return {x['remote_id']: x['filename'] for x in deli.load(settings.telegram_api_root / 'files/files.json')}
+
+
+def file_url(file: File | None) -> str | None:
+    if file is None:
+        return None
+
+    file_id = file.remote.id
+    if file_id not in id_to_file():
+        print(f'File {file_id} not found')
+        return
+
+    return f'{settings.base_url}/files/telegramapi/{file_id}'

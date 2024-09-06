@@ -3,13 +3,13 @@ from __future__ import annotations
 import multimethod
 from jboc import collect
 
-from .mrkdwn import convert_mrkdwn
-from ..elements import EmojiBase, Icon, Image, Link, Sequence, Text, File, Section, Context
+from ..elements import Context, EmojiBase, File, Icon, Image, Link, Section, Sequence, Text
 from ..schema import AgentMessage, BaseSystemMessage, Reaction, Shared, SystemMessage
+from ..utils import split_into_segments
 from .elements import custom_emojis
+from .mrkdwn import convert_mrkdwn
 from .schema import BotMessage, EventMessage, ThreadBroadcast, UnknownFile, UserMessage
 from .utils import file_url, standard_emojis
-from ..utils import split_into_segments
 
 
 @multimethod.multimethod

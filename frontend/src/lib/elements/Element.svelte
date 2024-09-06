@@ -29,6 +29,7 @@
     import File from "./File.svelte";
     import Contact from "./Contact.svelte";
     import Location from "./Location.svelte";
+    import Sticker from "./Sticker.svelte";
 
     export let element: Element;
     export let info: ChatInfo;
@@ -53,6 +54,7 @@
         ["video", Video],
         ["audio", Audio],
         ["file", File],
+        ["sticker", Sticker],
 
         ["sequence", Sequence],
         ["section", Section],

@@ -1,0 +1,5 @@
+[tool.isort]
+line_length = 120
+lines_after_imports = 2
+multi_line_output = 5
+combine_as_imports = true

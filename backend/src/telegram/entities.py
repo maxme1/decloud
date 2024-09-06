@@ -1,8 +1,8 @@
 from typing import Literal, Union
 
-from .utils import file_url
 from .. import elements
 from ..utils import NoExtra
+from .utils import file_url
 
 
 MISSING_FILE = '(File not included. Change data exporting settings to download.)'

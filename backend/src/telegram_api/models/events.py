@@ -3,10 +3,10 @@ from __future__ import annotations
 import datetime
 from typing import Literal
 
+from ...schema import SystemEventType
+from ..utils import TypeDispatch
 from .content import ContentBase
 from .media import MiniThumbnail, PhotoSize
-from ..utils import TypeDispatch
-from ...schema import SystemEventType
 
 
 class SystemEvent:

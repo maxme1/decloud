@@ -4,8 +4,8 @@ from collections import defaultdict
 from functools import partial
 from typing import Literal, Union
 
-from ..utils import TypeDispatch, custom_emojis
 from ... import elements
+from ..utils import TypeDispatch, custom_emojis
 
 
 class FormattedText(TypeDispatch):

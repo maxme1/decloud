@@ -4,9 +4,9 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    slack_root: Path
-    telegram_root: Path
-    telegram_api_root: Path
+    slack_root: Path | None = None
+    telegram_root: Path | None = None
+    telegram_api_root: Path | None = None
     base_url: str
 
 

@@ -62,7 +62,7 @@ class Header(BlockBase):
     text: PlainText
 
     def convert(self):
-        return elements.Header(text=self.text.convert())
+        return elements.Header(element=self.text.convert())
 
 
 class Context(BlockBase):

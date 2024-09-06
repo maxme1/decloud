@@ -2,6 +2,7 @@ import sys
 
 import deli
 
+
 present = [
     'video/mp4', 'text/plain', 'image/png', 'audio/mpeg', 'image/gif', 'image/jpeg',
     'audio/ogg', 'text/x-python', 'image/vnd.djvu', 'image/webp',

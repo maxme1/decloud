@@ -10,6 +10,10 @@
         const chatId: string = value.params.id;
         const source: string = value.params.source;
 
+        if ($channels.length === 0) {
+            $channels = await ApiService.chatsChatsGet();
+        }
+
         $activeChannel = {
             channel: $channels.find((c) => c.id === chatId)!,
             messages: await ApiService.messagesMessagesSourceChatIdGet({
@@ -36,7 +40,7 @@
 <div class="flex h-screen w-screen divide-x">
     <ChannelsList channels={$channels}></ChannelsList>
 
-    {#if $activeChannel}
+    {#if $activeChannel !== null}
         <div class="p-2 mx-1 w-full flex flex-col overflow-x-hidden">
             <ChatTimeline
                 channel={$activeChannel.channel}

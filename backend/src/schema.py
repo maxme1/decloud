@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 from typing import Literal, Union
 
-from .elements import EmojiBase, Element
+from .elements import Element, EmojiBase
 from .utils import NoExtra
 
 

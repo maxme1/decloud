@@ -1,4 +1,5 @@
 from functools import cache
+from typing import Union
 
 import deli
 from pydantic import model_validator
@@ -8,24 +9,8 @@ from ..utils import NoExtra
 
 
 @cache
-def id_to_file():
-    return {x['id']: x['filename'] for x in deli.load(settings.telegram_api_root / 'files/files.json')}
-
-
-@cache
 def custom_emojis():
     return {x['id']: x['emoji'] for x in deli.load(settings.telegram_api_root / 'custom-emojis.json')}
-
-
-def file_url(file_id: int | None) -> str | None:
-    if file_id is None:
-        return None
-
-    if file_id not in id_to_file():
-        print(f'File {file_id} not found')
-        return
-
-    return f'{settings.base_url}/files/telegramapi/{file_id}'
 
 
 class TypeDispatch(NoExtra):
@@ -36,3 +21,8 @@ class TypeDispatch(NoExtra):
             values['type_'] = values.pop('@type')
 
         return values
+
+
+class Subclasses:
+    def __class_getitem__(cls, item):
+        return Union[*item.__subclasses__()]

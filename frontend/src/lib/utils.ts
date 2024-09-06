@@ -1,17 +1,19 @@
 import type { Element } from "./client";
 
 export function* elementWalker(x: Element): Iterable<Element> {
+    if (!x || typeof x !== 'object') return;
+
     yield x;
 
-    if ('elements' in x && x.elements && (x.elements[0] instanceof Element)) {
+    if ('elements' in x && x.elements) {
         for (const child of x.elements) {
             yield* elementWalker(child);
         }
     }
-    if ('element' in x && x.element && (x.element instanceof Element)) {
+    if ('element' in x && x.element) {
         yield* elementWalker(x.element);
     }
-    if ('text' in x && x.text && (x.text instanceof Element)) {
+    if ('text' in x && x.text) {
         yield* elementWalker(x.text as Element);
     }
 }

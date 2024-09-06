@@ -10,5 +10,5 @@
 </script>
 
 <div class="font-semibold">
-    <Element element={element.text} {info}></Element>
+    <Element element={element.element} {info}></Element>
 </div>

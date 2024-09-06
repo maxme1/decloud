@@ -1,13 +1,13 @@
 import deli
 from jboc import collect
 
-from .models.chat import Chat
-from .models.user import User
-from .utils import id_to_file
 from ..interface import Chat as MainChat, ChatInterface
 from ..schema import Agent
 from ..settings import settings
+from .models.chat import Chat
+from .models.media import file_url, id_to_file
 from .models.message import Message
+from .models.user import User
 
 
 class TelegramAPI(ChatInterface):
@@ -63,13 +63,13 @@ class TelegramAPI(ChatInterface):
         users = self._get_users()
         return [
             Agent(
-                id=str(user.id), name=(user.first_name + ' ' + user.last_name).strip(), avatar=None,
+                id=str(user.id), name=(user.first_name + ' ' + user.last_name).strip(),
+                avatar=file_url(user.profile_photo.small) if user.profile_photo else None,
                 is_bot=isinstance(user.type, User.BotUser)
             )
             for user in users.values()
         ]
 
     def resolve(self, file):
-        file = int(file)
         absolute = settings.telegram_api_root / 'files' / id_to_file()[file]
         return absolute, absolute.suffix

@@ -5,28 +5,16 @@ from typing import Annotated, Literal, Union
 
 from pydantic import BeforeValidator
 
-from .content import ContentBase
-from .events import SystemEvent
-from ..utils import TypeDispatch, custom_emojis
 from ...elements import EmojiBase
 from ...schema import AgentMessage, BaseSystemMessage, Reaction, Shared
+from ..utils import TypeDispatch, custom_emojis
+from .content import ContentBase
+from .events import SystemEvent
+from .sender import Sender, SenderChat
 
 
 FlaggedTimestamp = Annotated[datetime.datetime | None, BeforeValidator(lambda x: x or None)]
 Content = Union[*ContentBase.__subclasses__()]
-
-
-class SenderChat(TypeDispatch):
-    type_: Literal['messageSenderChat']
-    chat_id: int
-
-
-class SenderUser(TypeDispatch):
-    type_: Literal['messageSenderUser']
-    user_id: int
-
-
-Sender = SenderChat | SenderUser
 
 
 class Message(TypeDispatch):

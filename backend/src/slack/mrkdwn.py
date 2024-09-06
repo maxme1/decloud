@@ -3,8 +3,9 @@ import re
 
 import marko
 import multimethod
-from marko.block import BlankLine, FencedCode, HTMLBlock, List, ListItem, Paragraph, Document, SetextHeading, \
-    ThematicBreak
+from marko.block import (
+    BlankLine, Document, FencedCode, HTMLBlock, List, ListItem, Paragraph, SetextHeading, ThematicBreak
+)
 from marko.ext.gfm.elements import Strikethrough
 from marko.inline import AutoLink, CodeSpan, Emphasis, LineBreak, Link, Literal, RawText, StrongEmphasis
 

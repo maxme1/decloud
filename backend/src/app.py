@@ -6,9 +6,10 @@ from starlette.responses import Response
 
 from .interface import Chat, ChatInfo, ChatInterface
 from .schema import AnyMessage
-from .slack.interface import Slack  # noqa
+from .settings import settings
+from .slack.interface import Slack
 from .static import serve
-from .telegram.interface import Telegram  # noqa
+from .telegram.interface import Telegram
 from .telegram_api.interface import TelegramAPI
 
 
@@ -36,7 +37,15 @@ def get_agents(interface):
 
 @app.get('/chats')
 async def chats() -> list[Chat]:
-    return TelegramAPI().gather_chats()  # + Telegram().gather_chats()  # + Slack().gather_chats()
+    result = []
+    if settings.telegram_api_root:
+        result.extend(Telegram().gather_chats())
+    if settings.slack_api_root:
+        result.extend(Slack().gather_chats())
+    if settings.telegram_root:
+        result.extend(TelegramAPI().gather_chats())
+
+    return result
 
 
 @app.get('/messages/{source}/{chat_id}')
@@ -44,36 +53,13 @@ async def messages(source: str, chat_id: str) -> list[AnyMessage]:
     chat = ChatInterface.find(source)
     result = []
     for msg in chat.load(chat_id):
-        # if 'reply_to' not in msg:
-        #     continue
-        # if msg.get('media_type') != 'video_file':
-        #     # if 'cashtag' not in str(msg):
-        #     # if not msg.get('location_information'):
-        #     continue
-
-        # print(msg.get('edited'))
-        # if msg.get('media_type') not in ['video_file', 'audio_file', 'voice_message', 'animation', 'video_message']:
-        #     continue
-        # if not msg.get('attachments'):
-        #     continue
-
         try:
             msg = chat.validate(msg)
         except Exception as e:
             raise RuntimeError(msg) from e
 
         ready = chat.convert(msg)
-        # if ']:(' not in str(ready):
-        #     continue
-
-        # if not any(x.type in ('file', 'image', 'video', 'audio') for x in ready.blocks):
-        #     continue
-        # if 'ATTACHMENT: !!!!' not in str(ready):
-        #     continue
-
         result.append(ready)
-        # if len(result) > 10:
-        #     break
 
     return result
 

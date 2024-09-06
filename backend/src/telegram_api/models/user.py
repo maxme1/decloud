@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal, Union
+from typing import Literal
 
+from ..utils import Subclasses, TypeDispatch
 from .media import File, MiniThumbnail
-from ..utils import TypeDispatch
 
 
 class User(TypeDispatch, extra='ignore'):
@@ -28,10 +28,16 @@ class User(TypeDispatch, extra='ignore'):
         big: File
         minithumbnail: MiniThumbnail
 
+    class UserNames(TypeDispatch):
+        type_: Literal['usernames']
+        active_usernames: list[str]
+        disabled_usernames: list[str]
+        editable_username: str
+
     type_: Literal['user']
     id: int
     first_name: str
     last_name: str
-    usernames: dict | None = None
+    usernames: UserNames | None = None
     profile_photo: ProfilePhoto | None = None
-    type: Union[*UserTypeBase.__subclasses__()]
+    type: Subclasses[UserTypeBase]

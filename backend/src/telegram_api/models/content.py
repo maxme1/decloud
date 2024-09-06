@@ -1,19 +1,20 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Iterable, Literal
 
 from pydantic import BaseModel
 
-from .media import File, MiniThumbnail, PhotoSize, Sticker, Thumbnail
-from .text import FormattedText
-from ..utils import TypeDispatch, file_url
 from ... import elements
+from ..utils import Subclasses, TypeDispatch
+from .media import File, MiniThumbnail, PhotoSize, Sticker, Thumbnail, file_url
+from .sender import Sender
+from .text import FormattedText
 
 
 class ContentBase(TypeDispatch):
     type_: str
 
-    def get_files(self):
+    def get_files(self) -> Iterable[File]:
         return []
 
     def convert(self, context):
@@ -40,7 +41,10 @@ class MessageAnimatedEmoji(ContentBase):
             yield self.animated_emoji.sound
 
     def convert(self, context):
-        return elements.Emoji(unicode=self.emoji, name=None, skin_tone=None, url=None)
+        return elements.Sticker(
+            emoji=elements.Emoji(unicode=self.emoji, name=None, skin_tone=None, url=None),
+            url=file_url(self.animated_emoji.sticker.sticker), mimetype=self.animated_emoji.sticker.mimetype,
+        )
 
 
 class MessageAudio(ContentBase):
@@ -65,7 +69,7 @@ class MessageAudio(ContentBase):
 
     def convert(self, context):
         return elements.Sequence(elements=[
-            elements.Audio(url=file_url(self.audio.audio.id), name=None, thumbnail=None),
+            elements.Audio(url=file_url(self.audio.audio), name=None, thumbnail=None),
             self.caption.convert(),
         ])
 
@@ -159,8 +163,10 @@ class MessageSticker(ContentBase):
         return [self.sticker.sticker]
 
     def convert(self, context):
-        # TODO
-        return elements.Emoji(unicode=self.sticker.emoji, name=None, skin_tone=None, url=None)
+        return elements.Sticker(
+            emoji=elements.Emoji(unicode=self.sticker.emoji, name=None, skin_tone=None, url=None),
+            url=file_url(self.sticker.sticker), mimetype=self.sticker.mimetype,
+        )
 
 
 class MessageVideoNote(ContentBase):
@@ -183,8 +189,8 @@ class MessageVideoNote(ContentBase):
 
     def convert(self, context):
         return elements.Video(
-            url=file_url(self.video_note.video.id), name=None,
-            thumbnail=file_url(self.video_note.thumbnail.file.id) if self.video_note.thumbnail else None,
+            url=file_url(self.video_note.video), name=None,
+            thumbnail=file_url(self.video_note.thumbnail.file) if self.video_note.thumbnail else None,
             size=self.video_note.video.size,
         )
 
@@ -207,7 +213,7 @@ class MessageVoiceNote(ContentBase):
 
     def convert(self, context):
         return elements.Sequence(elements=[
-            elements.Audio(url=file_url(self.voice_note.voice.id), name=None, thumbnail=None),
+            elements.Audio(url=file_url(self.voice_note.voice), name=None, thumbnail=None),
             self.caption.convert(),
         ])
 
@@ -230,8 +236,8 @@ class MessageDocument(ContentBase):
 
     def convert(self, context):
         return elements.File(
-            url=file_url(self.document.document.id), name=self.document.file_name, mimetype=self.document.mime_type,
-            thumbnail=file_url(self.document.thumbnail.file.id) if self.document.thumbnail else None,
+            url=file_url(self.document.document), name=self.document.file_name, mimetype=self.document.mime_type,
+            thumbnail=file_url(self.document.thumbnail.file) if self.document.thumbnail else None,
         )
 
 
@@ -272,7 +278,7 @@ class MessagePhoto(ContentBase, MediaMixin):
         return [size.photo for size in self.photo.sizes]
 
     def convert(self, context):
-        element = elements.Image(url=file_url(max(self.photo.sizes, key=lambda x: x.photo.size).photo.id), name=None)
+        element = elements.Image(url=file_url(max(self.photo.sizes, key=lambda x: x.photo.size).photo), name=None)
         if self.caption:
             return elements.Sequence(elements=[element, self.caption.convert()])
         return element
@@ -303,8 +309,8 @@ class MessageVideo(ContentBase, MediaMixin):
 
     def convert(self, context):
         element = elements.Video(
-            url=file_url(self.video.video.id), name=self.video.file_name,
-            thumbnail=file_url(self.video.thumbnail.file.id) if self.video.thumbnail else None,
+            url=file_url(self.video.video), name=self.video.file_name,
+            thumbnail=file_url(self.video.thumbnail.file) if self.video.thumbnail else None,
             size=self.video.video.size,
         )
         if self.caption:
@@ -326,11 +332,11 @@ class MessageAnimation(ContentBase, MediaMixin):
     def convert(self, context):
         kind = self.animation.mime_type
         if kind == 'image/gif':
-            element = elements.Image(url=file_url(self.animation.animation.id), name=self.animation.file_name)
+            element = elements.Image(url=file_url(self.animation.animation), name=self.animation.file_name)
         else:
             element = elements.Video(
-                url=file_url(self.animation.animation.id), name=self.animation.file_name,
-                thumbnail=file_url(self.animation.thumbnail.file.id) if self.animation.thumbnail else None,
+                url=file_url(self.animation.animation), name=self.animation.file_name,
+                thumbnail=file_url(self.animation.thumbnail.file) if self.animation.thumbnail else None,
                 size=self.animation.animation.size,
             )
 
@@ -339,9 +345,42 @@ class MessageAnimation(ContentBase, MediaMixin):
         return element
 
 
-class Poll(ContentBase):
+class MessagePoll(ContentBase):
+    class Poll(TypeDispatch):
+        class PollOption(TypeDispatch):
+            type_: Literal['pollOption']
+            text: FormattedText
+            voter_count: int
+            is_chosen: bool
+            is_being_chosen: bool
+            vote_percentage: int
+
+        class PollType(TypeDispatch):
+            pass
+
+        class Regular(PollType):
+            type_: Literal['pollTypeRegular']
+            allow_multiple_answers: bool
+
+        class Quiz(PollType):
+            type_: Literal['pollTypeQuiz']
+            explanation: FormattedText
+            correct_option_id: int
+
+        type_: Literal['poll']
+        id: int
+        question: FormattedText
+        options: list[PollOption]
+        total_voter_count: int
+        recent_voter_ids: list[Sender]
+        is_anonymous: bool
+        type: Subclasses[PollType]
+        close_date: int
+        open_period: int
+        is_closed: bool
+
     type_: Literal['messagePoll']
-    poll: dict
+    poll: Poll
 
 
 def thumbnail(x):

@@ -21,7 +21,7 @@ class CallElement(ElementBase, extra='ignore'):
 
 class Header(ElementBase):
     type: Literal['header'] = 'header'
-    text: Element
+    element: Element
 
 
 class Context(ElementBase):
@@ -193,6 +193,8 @@ class Icon(ElementBase):
 class Sticker(ElementBase):
     type: Literal['sticker'] = 'sticker'
     url: str | None
+    emoji: Emoji | None
+    mimetype: str | None
 
 
 class Video(ElementBase):
