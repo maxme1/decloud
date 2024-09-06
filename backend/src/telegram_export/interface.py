@@ -8,7 +8,7 @@ from .schema import AnyMessage
 
 
 class Telegram(ChatInterface):
-    name = 'telegram-export'
+    name = 'telegram_export-export'
 
     def load(self, x):
         return deli.load(self.root / f'{x}.json')['messages']

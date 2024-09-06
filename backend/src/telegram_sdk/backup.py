@@ -54,7 +54,7 @@ def telegram_sdk(storage: Path):
         files_directory=files_dir,
         use_message_database=False,
         tdlib_verbosity=0,
-        # device_model: str = 'python-telegram',
+        # device_model: str = 'python-telegram_export',
         # application_version: str = '0.19.0',
         # system_version: str = 'unknown',
     )

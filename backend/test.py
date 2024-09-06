@@ -1,21 +1,10 @@
 from tqdm.auto import tqdm
 
-from backend.src.settings import settings
-from backend.src.slack.interface import Slack
-from backend.src.telegram.interface import Telegram
-from backend.src.telegram_api.interface import TelegramAPI
+from src.interface import ChatInterface
 
 
-interfaces = []
-if settings.telegram_api_root:
-    interfaces.append(TelegramAPI())
-if settings.slack_root:
-    interfaces.append(Slack())
-if settings.telegram_root:
-    interfaces.append(Telegram())
-
-for interface in interfaces:
-    bar = tqdm(interface.gather_chats(), desc=type(interface).__name__)
+for interface in ChatInterface.all().values():
+    bar = tqdm(interface.gather_chats(), desc=interface.name)
     for chat in bar:
         bar.set_postfix(chat=chat.name)
         for msg in interface.load(chat.id):

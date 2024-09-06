@@ -12,7 +12,7 @@ from .models.user import User
 
 
 class TelegramAPI(ChatInterface):
-    name = 'telegram-sdk'
+    name = 'telegram_export-sdk'
 
     def _get_users(self):
         return {x['id']: User.model_validate(x) for x in deli.load(settings.telegram_api_root / 'users.json')}
@@ -52,7 +52,7 @@ class TelegramAPI(ChatInterface):
             # ):
             #     continue
 
-            # telegram main channel: 777000
+            # telegram_export main channel: 777000
             # if chat.id == 777000:
             #     continue
 
