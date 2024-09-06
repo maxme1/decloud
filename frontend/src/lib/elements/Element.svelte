@@ -1,6 +1,6 @@
 <script lang="ts">
-    import type { RichText } from "$lib/client";
     import type { ChatInfo } from "$lib";
+    import type { Element } from "$lib/client";
     import Text from "./Text.svelte";
     import Emoji from "./Emoji.svelte";
     import User from "./User.svelte";
@@ -20,23 +20,36 @@
     import Icon from "./Icon.svelte";
     import Code from "./Code.svelte";
     import Button from "./Button.svelte";
+    import Video from "./Video.svelte";
+    import Audio from "./Audio.svelte";
+    import Call from "./Call.svelte";
+    import Actions from "./Actions.svelte";
+    import Context from "./Context.svelte";
+    import Header from "./Header.svelte";
+    import File from "./File.svelte";
+    import Contact from "./Contact.svelte";
 
-    export let element: RichText["elements"][0];
+    export let element: Element;
     export let info: ChatInfo;
 
     const components = new Map<string, any>([
-        ["emoji", Emoji],
         ["user", User],
-        ["link", Link],
-        ["text", Text],
         ["channel", Channel],
         ["broadcast", Broadcast],
         ["usergroup", UserGroup],
+        ["contact", Contact],
 
         ["button", Button],
+        // ["call", Call],
+        ["actions", Actions],
+        ["context", Context],
+        ["header", Header],
 
         ["image", Image],
         ["icon", Icon],
+        ["video", Video],
+        ["audio", Audio],
+        ["file", File],
 
         ["sequence", Sequence],
         ["section", Section],
@@ -48,6 +61,9 @@
         ["bold", Bold],
         ["italic", Italic],
         ["code", Code],
+        ["emoji", Emoji],
+        ["link", Link],
+        ["text", Text],
     ]);
 </script>
 

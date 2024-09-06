@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal, Union
 
-from pydantic import BaseModel, Field, TypeAdapter, model_validator
+from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
 
 from ..utils import NoExtra
 from .blocks import Block
@@ -36,6 +36,11 @@ class MessageBlock(BaseModel):
         blocks: list[Block]
 
     message: MBlocks
+
+
+class Edited(NoExtra):
+    user: str
+    ts: TimeStr
 
 
 # TODO: catch all the extras
@@ -81,7 +86,7 @@ class Attachment(BaseModel):
     thumb_height: int | None = None
     title: str | None = None
     title_link: str | None = None
-    ts: TimeStr | int | None = None
+    ts: TimeStr | None = None
     id: int | None = None
 
     service_name: str | None = None
@@ -98,6 +103,12 @@ class Attachment(BaseModel):
     message_blocks: list[MessageBlock] = Field(default_factory=list)
     color: str | None = None
 
+    @field_validator('ts', mode='before')
+    def _ts(cls, v):
+        if isinstance(v, int):
+            return str(v)
+        return v
+
 
 class ThreadMixin(NoExtra):
     attachments: list[Attachment] = Field(default_factory=list)
@@ -110,7 +121,7 @@ class ThreadMixin(NoExtra):
     is_locked: bool | None = None
     subscribed: bool | None = None
     last_read: TimeStr | None = None
-    edited: dict | None = None
+    edited: Edited | None = None
     blocks: list[Block] = Field(default_factory=list)
     saved: dict | None = None
     client_msg_id: str | None = None
@@ -234,42 +245,37 @@ class EventMessage(Message):
 
 
 class ChannelJoin(EventMessage):
-    subtype: Literal['channel_join']
+    subtype: Literal['channel_join', 'group_join']
     team: str | None = None
     inviter: str | None = None
 
 
 class ChannelLeave(EventMessage):
-    subtype: Literal['channel_leave']
+    subtype: Literal['channel_leave', 'group_leave']
 
 
 class ChannelName(EventMessage):
-    subtype: Literal['channel_name']
+    subtype: Literal['channel_name', 'group_name']
     old_name: str
     name: str
 
 
 class ChannelTopic(EventMessage):
-    subtype: Literal['channel_topic']
+    subtype: Literal['channel_topic', 'group_topic']
     topic: str
 
 
 class ChannelPurpose(EventMessage):
-    subtype: Literal['channel_purpose']
+    subtype: Literal['channel_purpose', 'group_purpose']
     purpose: str
-
-
-class GroupPurpose(EventMessage):
-    subtype: Literal['group_purpose']
-    purpose: str
-
-
-class GroupJoin(EventMessage):
-    subtype: Literal['group_join']
 
 
 class ChannelArchive(EventMessage):
     subtype: Literal['channel_archive']
+
+
+class ChannelToPrivate(EventMessage):
+    subtype: Literal['channel_convert_to_private']
 
 
 class ChannelUnarchive(EventMessage):
@@ -307,7 +313,7 @@ class FileComment(EventMessage, FileMixin):
     subtype: Literal['file_comment']
     comment: dict
     user: str | None = None
-    edited: dict | None = None
+    edited: Edited | None = None
 
 
 class AppConversationJoin(EventMessage):
@@ -335,6 +341,7 @@ class ReplyBroadcast(EventMessage):
 
 class HuddleThread(EventMessage, ThreadMixin):
     subtype: Literal['huddle_thread']
+    canvas_update_section_ids: list[str] = Field(default_factory=list)
 
 
 # TODO

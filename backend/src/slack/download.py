@@ -87,40 +87,41 @@ def download(client: WebClient, url, to):
 
 def get_conversations(client: WebClient, root):
     root = Path(root)
-    for c in client.conversations_list(limit=500):
-        channel = c['id']
-        path = root / f'{channel}.json'
-        if path.exists():
-            continue
+    with tqdm(client.conversations_list(limit=500, types='public_channel,private_channel')['channels']) as bar:
+        for c in bar:
+            bar.set_description_str(c['name'])
+            channel = c['id']
+            path = root / f'{channel}.json'
+            #         if path.exists():
+            #             continue
 
-        print(c['name'])
+            try:
+                msgs = deli.load(path)
+            except FileNotFoundError:
+                msgs = []
 
-        try:
-            msgs = deli.load(path)
-        except FileNotFoundError:
-            msgs = []
+            #         if not msgs:
+            #             oldest = None
 
-        if not msgs:
-            oldest = None
+            #         else:
+            oldest = max([x['ts'] for x in msgs], key=float, default=None)
 
-        else:
-            oldest = msgs[-1]['ts']
+            added = False
+            for m in tqdm(paginated(
+                    client.conversations_history, unpack='messages',
+                    channel=channel, oldest=oldest, limit=200, include_all_metadata=True,
+            ), leave=False):
+                msgs.append(m)
+                added = True
+                if m.get('reply_count', 0) > 0:
+                    assert 'replies' not in m
+                    m['replies'] = sorted(paginated(
+                        client.conversations_replies, unpack="messages", channel=channel, ts=m['ts'], limit=200
+                    ), key=lambda x: float(x['ts']))
 
-        print(datetime.datetime.fromtimestamp(float(oldest or 0)))  # , datetime.datetime.fromtimestamp(float(latest)))
+            if added:
+                assert len(msgs) == len({x['ts'] for x in msgs})
+                msgs = sorted(msgs, key=lambda x: float(x['ts']))
+                deli.save(msgs, path)
 
-        for m in tqdm(paginated(
-                client.conversations_history, unpack='messages',
-                channel=channel, oldest=oldest, limit=200, include_all_metadata=True,
-        )):
-            msgs.append(m)
-            if m.get('reply_count', 0) > 0:
-                assert 'replies' not in m
-                m['replies'] = sorted(list(paginated(
-                    client.conversations_replies, unpack="messages", channel=channel, ts=m['ts'], limit=200
-                )), key=lambda x: float(x['ts']))
-
-        assert len(msgs) - len({x['ts'] for x in msgs}) == 0
-        msgs = sorted(msgs, key=lambda x: float(x['ts']))
-        deli.save(msgs, channel + '.json')
-
-        time.sleep(1)
+            time.sleep(1)

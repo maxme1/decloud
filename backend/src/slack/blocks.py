@@ -4,7 +4,7 @@ from typing import Literal, Union
 
 from pydantic import Field, model_validator
 
-from .. import blocks, elements
+from .. import elements
 from ..utils import NoExtra
 from .elements import Element, PlainText, convert_elements
 from .utils import file_url
@@ -25,7 +25,7 @@ class RichText(BlockBase):
     elements: list[Element]
 
     def convert(self):
-        return blocks.RichText(elements=convert_elements(self.elements))
+        return elements.Sequence(elements=convert_elements(self.elements))
 
 
 # TODO
@@ -50,10 +50,11 @@ class Section(BlockBase):
         return v
 
     def convert(self):
-        return blocks.Section(
-            elements=convert_elements(self.fields) if self.fields else [self.text.convert()],
-            accessory=self.accessory,
-        )
+        # TODO: accessory
+        # assert not self.accessory, self.accessory
+        return elements.Section(element=elements.Sequence(
+            elements=convert_elements(self.fields) if self.fields else [self.text.convert()]
+        ))
 
 
 class Header(BlockBase):
@@ -61,7 +62,7 @@ class Header(BlockBase):
     text: PlainText
 
     def convert(self):
-        return blocks.Header(text=self.text.convert())
+        return elements.Header(text=self.text.convert())
 
 
 class Context(BlockBase):
@@ -85,7 +86,7 @@ class Image(BlockBase):
     rotation: int = 0
 
     def convert(self):
-        return blocks.RichText(elements=[elements.Image(url=file_url(self.image_url))])
+        return elements.Image(url=file_url(self.image_url))
 
 
 class Actions(BlockBase):

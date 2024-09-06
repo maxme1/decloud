@@ -70,7 +70,7 @@ def _apply_style(x, style):
     if style.pop('bold', None):
         x = elements.Bold(element=x)
     if style.pop('strike', None):
-        x = elements.Strike(element=x)
+        x = elements.Strike(element=x, position='through')
     if style.pop('italic', None):
         x = elements.Italic(element=x)
     # TODO: ???
@@ -102,7 +102,7 @@ class RichTextElement(ElementBase):
         assert not self.border, self.border
         assert not self.offset, self.offset
         assert not self.indent, self.indent
-        return elements.Section(element=sequence)
+        return sequence
 
 
 class RichTextList(ElementBase):
@@ -117,7 +117,7 @@ class RichTextList(ElementBase):
         # assert not self.offset, (self.offset, self.elements)
         assert self.style in ('ordered', 'bullet'), self.style
         return elements.List(
-            elements=convert_elements(self.elements),
+            elements=[x.convert() for x in self.elements],
             style='ordered' if self.style == 'ordered' else 'unordered',
         )
 
@@ -125,13 +125,6 @@ class RichTextList(ElementBase):
 class Text(ElementBase):
     type: Literal['text']
     text: str
-
-    # def convert(self):
-    #     text = elements.Text(text=self.text)
-    #
-    #
-    #     assert not style, style
-    #     return text
 
 
 class PlainText(ElementBase):

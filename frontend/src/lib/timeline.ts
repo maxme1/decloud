@@ -1,8 +1,3 @@
-import type { PhoneCall, EditChatTheme, InviteMembers, EditGroupPhoto, MigrateFromGroup, MigrateToSupergroup } from "./schema";
-
-export type Service = PhoneCall | EditChatTheme | EditGroupPhoto | InviteMembers | MigrateFromGroup | MigrateToSupergroup;
-// export type Message = Message | Service;
-
 function newGroup(present: Message, message: Message): boolean {
     if (present.type !== message.type) {
         return true;
@@ -57,17 +52,34 @@ export function isAgent(group: Message[]): group is AgentMessage[] {
 export function isSystem(group: Message[]): group is SystemMessage[] {
     return group[0].type === "system";
 }
-export function getAgent(group: AgentMessage[], info: ChatInfo): Agent | null {
-    if (group[0].agent_id == null) return null;
-    const agent = info.agents.find((x) => x.id == group[0].agent_id);
+export function getAgent(entity: AgentMessage[] | string | null, info: ChatInfo): Agent | null {
+    if (entity === null) return null;
+    let uid: string | null;
+    if (typeof entity === "string") {
+        uid = entity;
+    } else {
+        uid = entity[0].agent_id;
+    }
+    if (uid == null) return null;
+    const agent = info.agents.find((x) => x.id === uid);
     if (agent === undefined)
-        console.log("Unknown agent: " + group[0].agent_id);
+        console.log("Unknown agent: " + uid);
     return agent ?? null;
 }
 
-import type { Agent, AgentMessage, SystemMessage } from "./client";
+export function timeString(timestamp: string) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h24",
+    });
+}
+
+import type { Agent, AgentMessage, AnyMessage, SystemMessage } from "./client";
 import type { ChatInfo } from "$lib";
 
-type Message = AgentMessage | SystemMessage;
+// TODO: remove this
+type Message = AnyMessage;
 
 export { type AgentMessage, type Message, type SystemMessage };

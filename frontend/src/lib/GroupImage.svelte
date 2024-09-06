@@ -1,7 +1,8 @@
 <script lang="ts">
-    import { isAgent, getAgent, type Message, isSystem } from "./timeline";
+    import { isAgent, type Message, isSystem } from "./timeline";
     import { type ChatInfo } from "$lib";
     import Icon from "@iconify/svelte";
+    import AgentImage from "./AgentImage.svelte";
 
     export let group: Message[];
     export let info: ChatInfo;
@@ -11,16 +12,12 @@
         ["join", "tabler:door-enter"],
         ["leave", "tabler:door-exit"],
         ["purpose", "tabler:target"],
+        ["archive", "tabler:archive"],
     ]);
 </script>
 
 {#if isAgent(group)}
-    {@const agent = getAgent(group, info)}
-    {#if agent === null || agent.avatar === null}
-        <Icon icon="tabler:user-question" class="w-full h-full"></Icon>
-    {:else}
-        <img src={agent.avatar} class="rounded" />
-    {/if}
+    <AgentImage agent_id={group[0].agent_id} {info} />
 {:else if isSystem(group)}
     {@const first = group[0]}
     {#if icons.has(first.event)}

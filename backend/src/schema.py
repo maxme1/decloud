@@ -3,8 +3,7 @@ from __future__ import annotations
 import datetime
 from typing import Literal, Union
 
-from .blocks import Block
-from .elements import EmojiBase
+from .elements import EmojiBase, Element
 from .utils import NoExtra
 
 
@@ -34,7 +33,7 @@ class Base(NoExtra):
     id: str
     timestamp: datetime.datetime
     thread: list[AnyMessage]
-    blocks: list[Block]
+    elements: list[Element]
     reactions: list[Reaction]
 
 
@@ -45,24 +44,35 @@ class Agent(NoExtra):
     is_bot: bool
 
 
-class SystemMessage(Base):
+class BaseSystemMessage(Base):
     type: Literal['system'] = 'system'
-    event: Literal['call', 'join', 'leave', 'purpose'] | str
+    event: Literal['join', 'leave', 'purpose', 'archive'] | str
     agents: list[str]
 
 
+class Call(BaseSystemMessage):
+    event: Literal['call'] = 'call'
+    duration: float | None
+
+
 class Shared(NoExtra):
-    message: AnyMessage
-    channel_id: str
+    id: str | None
+    agent_id: str | None
+    channel_id: str | None
+
+    timestamp: datetime.datetime | None
+    elements: list[Element]
 
 
 class AgentMessage(Base):
     type: Literal['agent'] = 'agent'
 
     agent_id: str | None
+    edited: datetime.datetime | None
 
     shared: list[Shared]
     reply_to: list[str]
 
 
+type SystemMessage = Union[BaseSystemMessage, *BaseSystemMessage.__subclasses__()]
 type AnyMessage = AgentMessage | SystemMessage

@@ -3,13 +3,13 @@
     import type { Audio } from "$lib/client";
     import Icon from "@iconify/svelte";
 
-    export let block: Audio;
+    export let element: Audio;
     export let info: ChatInfo;
 </script>
 
-{#if block.url}
+{#if element.url}
     <audio controls>
-        <source src={block.url} />
+        <source src={element.url} />
         Your browser does not support the audio element.
     </audio>
 {:else}

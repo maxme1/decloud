@@ -1,30 +1,9 @@
 <script lang="ts">
-    import { page } from "$app/stores";
-    import { filesRoot, type ChatInfo } from "$lib";
+    import { type ChatInfo } from "$lib";
     import ChatThread from "$lib/ChatThread.svelte";
-    // import ChatTimeline from "$lib/ChatTimeline.svelte";
-    import {
-        DefaultService,
-        OpenAPI,
-        type Agent,
-        type AgentMessage,
-        type Chat,
-    } from "$lib/client";
+    import { DefaultService, OpenAPI, type Chat } from "$lib/client";
     import type { Message } from "$lib/timeline";
-    import {
-        Sidebar,
-        SidebarGroup,
-        SidebarItem,
-        SidebarWrapper,
-    } from "flowbite-svelte";
-    import {
-        ChartPieSolid,
-        GridSolid,
-        MailBoxSolid,
-        UserSolid,
-    } from "flowbite-svelte-icons";
     import { onMount } from "svelte";
-    $: activeUrl = $page.url.pathname;
 
     let chats: Chat[] = [];
     let activeChat: Chat | null = null;
@@ -90,6 +69,11 @@
     //     return Array.from(types).toSorted();
     // }
 
+    function cliptLongName(name: string): string {
+        const size = 16;
+        return name.length > size ? name.slice(0, size) + "..." : name;
+    }
+
     OpenAPI.BASE = "http://localhost:9000";
 
     onMount(async () => {
@@ -98,47 +82,32 @@
     });
 </script>
 
-<div class="h-screen w-screen">
-    <div class="flex h-screen w-screen">
-        <div class="overflow-auto">
-            <Sidebar
-                {activeUrl}
-                activeClass="flex items-center p-2 text-base font-normal text-primary-900 bg-primary-200 dark:bg-primary-700 rounded-lg dark:text-white hover:bg-primary-100 dark:hover:bg-gray-700"
-                nonActiveClass="flex items-center p-2 text-base font-normal text-green-900 rounded-lg dark:text-white hover:bg-green-100 dark:hover:bg-green-700"
-            >
-                <SidebarWrapper>
-                    <SidebarGroup>
-                        {#each chats as chat}
-                            <SidebarItem
-                                label={chat.name}
-                                on:click={() => selectChat(chat)}
-                            ></SidebarItem>
-                        {/each}
-                    </SidebarGroup>
-                </SidebarWrapper>
-            </Sidebar>
-        </div>
-
-        {#if activeChat !== null}
-            <div class="p-2 h-screen w-full flex flex-col overflow-x-hidden">
-                <div class="flex-1 min-w-0">
-                    <p
-                        class="text-lg font-semibold text-gray-900 dark:text-white"
+<div class="flex h-screen w-screen divide-x">
+    <div class="overflow-y-auto p-2 m-1">
+        <ul>
+            {#each chats as chat}
+                <li>
+                    <button
+                        on:click={() => selectChat(chat)}
+                        class={"text-gray-500 dark:text-gray-400 px-2 hover:bg-gray-200 rounded-md p-1 w-full text-left text-nowrap overflow-clip text-clip " +
+                            (activeChat === chat ? "bg-gray-300" : "")}
                     >
-                        {activeChat.name}
-                    </p>
-                </div>
-
-                <ChatThread {messages} {info} />
-
-                <!-- <ChatTimeline
-                    {messages}
-                    chatName={activeChat[1]}
-                    users={extractUsers(messages)}
-                    mediaTypes={extractMediaTypes(messages)}
-                    textTypes={extractTextTypes(messages)}
-                /> -->
-            </div>
-        {/if}
+                        <small>{cliptLongName(chat.name)}</small>
+                    </button>
+                </li>
+            {/each}
+        </ul>
     </div>
+
+    {#if activeChat !== null}
+        <div class="p-2 mx-1 w-full flex flex-col overflow-x-hidden">
+            <div class="flex-1 min-w-0">
+                <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                    {activeChat.name}
+                </p>
+            </div>
+
+            <ChatThread {messages} {info} />
+        </div>
+    {/if}
 </div>

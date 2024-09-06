@@ -4,25 +4,33 @@
     import Thread from "./Thread.svelte";
 
     import { type ChatInfo } from "$lib";
-    import Blocks from "./blocks/Blocks.svelte";
     import { Badge } from "flowbite-svelte";
-    import EmojiBase from "./EmojiBase.svelte";
+    import Elements from "./elements/Elements.svelte";
+    import Reactions from "./Reactions.svelte";
+    import Call from "./events/Call.svelte";
 
     export let message: SystemMessage;
     export let info: ChatInfo;
 
-    const users = new Set(["join", "leave"]);
+    const users = new Set(["join", "leave", "archive"]);
+    const components = new Map([["call", Call]]);
 </script>
 
 <div class="flex flex-col">
     <div>
-        <Blocks blocks={message.blocks} {info} />
+        <Elements elements={message.elements} {info} />
     </div>
 
     <div class="hover:bg-gray-100 flex w-full rounded">
         <div class="text-sm text-gray-500 dark:text-gray-400">
             <span>
-                {#if message.event == "call"}{:else if users.has(message.event)}
+                {#if components.has(message.event)}
+                    <svelte:component
+                        this={components.get(message.event)}
+                        event={message}
+                        {info}
+                    ></svelte:component>
+                {:else if users.has(message.event)}
                     <div>
                         {#each message.agents as agent}
                             <User
@@ -46,16 +54,7 @@
 
     <!-- reactions -->
     <div>
-        {#if message.reactions.length > 0}
-            <div class="flex flex-wrap">
-                {#each message.reactions as reaction}
-                    <Badge color="blue" rounded
-                        ><EmojiBase {info} emoji={reaction.emoji} height={4} />
-                        {reaction.users.length}</Badge
-                    >
-                {/each}
-            </div>
-        {/if}
+        <Reactions reactions={message.reactions} {info}></Reactions>
     </div>
 
     <Thread messages={message.thread ?? []} {info}></Thread>

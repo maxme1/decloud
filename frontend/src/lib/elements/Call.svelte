@@ -1,8 +1,8 @@
 <script lang="ts">
     import type { ChatInfo } from "$lib";
-    import type { Call } from "$lib/client";
+    import type { CallElement } from "$lib/client";
 
-    export let block: Call;
+    export let element: CallElement;
     export let info: ChatInfo;
 </script>
 

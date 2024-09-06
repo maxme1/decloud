@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pydantic import BaseModel
 
 from .schema import Agent, AnyMessage
@@ -16,7 +18,10 @@ class ChatInterface:
     def convert(self, msg) -> AnyMessage:
         pass
 
-    def info(self, x):
+    def gather_agents(self):
+        pass
+
+    def gather_chats(self):
         pass
 
     def resolve(self, file):
@@ -26,9 +31,15 @@ class ChatInterface:
         _registry[cls.__name__.lower()] = cls
 
     @classmethod
-    def find(cls, name):
+    def find(cls, name) -> ChatInterface:
         return _registry[name]()
 
 
 class ChatInfo(BaseModel):
     agents: list[Agent]
+
+
+class Chat(BaseModel):
+    id: str
+    name: str
+    source: str

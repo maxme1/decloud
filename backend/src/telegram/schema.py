@@ -1,57 +1,21 @@
 from typing import Literal, Union
 
-from pydantic import BaseModel, Field, TypeAdapter
+from pydantic import Field, TypeAdapter
 
-MISSING_FILE = '(File not included. Change data exporting settings to download.)'
+from ..schema import BaseSystemMessage
+from ..utils import NoExtra
+from .entities import TextEntity
+
+
 StoredFile = str
 
 
-class NoExtra(BaseModel, extra='forbid'):
-    pass
-
-
-class PlainLike(NoExtra):
-    type: Literal[
-        'italic', 'phone', 'mention', 'cashtag', 'bank_card', 'underline',
-        'plain', 'link', 'code', 'email', 'bold', 'hashtag', 'strikethrough', 'bot_command', 'spoiler',
-    ]
-    text: str
-
-
-class BlockQuote(PlainLike):
-    type: Literal['blockquote']
-    collapsed: bool | None = None
-
-
-class Pre(PlainLike):
-    type: Literal['pre']
-    language: str
-
-
-class TextLink(PlainLike):
-    type: Literal['text_link']
-    href: str
-
-
-class MentionName(PlainLike):
-    type: Literal['mention_name']
-    user_id: int
-
-
-class CustomEmoji(PlainLike):
-    type: Literal['custom_emoji']
-    document_id: StoredFile
-
-
-TextEntity = Union[PlainLike, *PlainLike.__subclasses__()]
-
-
-class Location(NoExtra):
+class LocationInformation(NoExtra):
     latitude: float
     longitude: float
 
 
-class Contact(NoExtra):
+class ContactInformation(NoExtra):
     phone_number: str
     first_name: str
     last_name: str
@@ -121,10 +85,10 @@ class Message(MessageBase):
     performer: str | None = None
     title: str | None = None
 
-    contact_information: Contact | None = None
+    contact_information: ContactInformation | None = None
     contact_vcard: StoredFile = None
 
-    location_information: Location | None = None
+    location_information: LocationInformation | None = None
     live_location_period_seconds: int | None = None
     place_name: str | None = None
     address: str | None = None
@@ -136,12 +100,27 @@ class Message(MessageBase):
 
 class Service(MessageBase):
     type: Literal['service']
+    action: str
 
     actor: str | None
     actor_id: str
 
     date: str
     date_unixtime: int
+
+    def _kwargs(self):
+        return {}
+
+    def convert(self):
+        events = dict(
+            phone_call='call',
+        )
+        kwargs = dict(
+            id=str(self.id), timestamp=self.date_unixtime, thread=[], elements=[], reactions=[],
+            event=events.get(self.action, self.action), agents=[self.actor_id],
+        )
+        kwargs.update(self._kwargs())
+        return BaseSystemMessage(**kwargs)
 
 
 class PhoneCall(Service):
@@ -177,6 +156,9 @@ class MigrateFromGroup(Service):
 class InviteMembers(Service):
     action: Literal['invite_members']
     members: list[str]
+
+    def _kwargs(self):
+        return dict(event='join', agents=self.members)
 
 
 class RemoveMembers(Service):

@@ -1,42 +1,17 @@
 <script lang="ts">
+    import { ButtonGroup, Button, Tooltip } from "flowbite-svelte";
+    import { groupMessages, timeString, type Message } from "./timeline";
     import {
-        Indicator,
-        Avatar,
-        Badge,
-        ButtonGroup,
-        Button,
-        Tooltip,
-    } from "flowbite-svelte";
-    import { List, Li } from "flowbite-svelte";
-    import {
-        groupMessages,
-        // type AnyMessage,
-        type Message,
-        type Service,
-    } from "./timeline";
-    import MessagesGroup from "./MessagesGroup.svelte";
-    import ServiceGroup from "./SystemContent.svelte";
-    import CheckboxList from "./CheckboxList.svelte";
-    import {
-        UserSettingsOutline,
-        ChartPieOutline,
         ChevronLeftOutline,
         ChevronRightOutline,
     } from "flowbite-svelte-icons";
-    import PostGraphs from "./PostGraphs.svelte";
-    import CheckBoxBool from "./CheckBoxBool.svelte";
-    import {
-        type Agent,
-        type AgentMessage,
-        type SystemMessage,
-    } from "$lib/client";
     import type { ChatInfo } from "$lib";
     import MessageContentDispatch from "./MessageContentDispatch.svelte";
-    import Icon from "@iconify/svelte";
     import GroupImage from "./GroupImage.svelte";
     import GroupHeader from "./GroupHeader.svelte";
+    import type { AnyMessage } from "./client";
 
-    export let messages: Message[];
+    export let messages: AnyMessage[];
     export let info: ChatInfo;
 
     // pagination
@@ -46,7 +21,7 @@
     let page = 0;
     let pages: number[] = [];
 
-    let groups: Message[][] = [];
+    let groups: AnyMessage[][] = [];
 
     $: {
         const edges = 2;
@@ -78,15 +53,6 @@
                 .toReversed(),
         );
     }
-
-    function timeString(timestamp: string) {
-        const date = new Date(timestamp);
-        return date.toLocaleTimeString(undefined, {
-            hour: "2-digit",
-            minute: "2-digit",
-            hourCycle: "h24",
-        });
-    }
 </script>
 
 <div class="flex flex-col overflow-hidden">
@@ -98,9 +64,9 @@
         </div>
     {:else}
         <div class="overflow-y-auto break-words" bind:this={messagesElement}>
-            <List tag="ul" list="none">
+            <ul>
                 {#each groups as group}
-                    <Li>
+                    <li>
                         <div class="flex items-center mb-3">
                             <div class="w-full">
                                 <div class="flex justify-start w-full">
@@ -136,8 +102,8 @@
                                     <div
                                         class="flex time-parent w-full justify-start"
                                     >
-                                        <div class="w-10">
-                                            <small class="time-child"
+                                        <div class="w-10 flex">
+                                            <small class="time-child mx-auto"
                                                 >{timeString(
                                                     message.timestamp,
                                                 )}</small
@@ -160,13 +126,13 @@
                                 {/each}
                             </div>
                         </div>
-                    </Li>
+                    </li>
                 {/each}
                 <!-- <InfiniteScroll
         threshold={100}
         on:loadMore={() => console.log("load")}
     /> -->
-            </List>
+            </ul>
         </div>
 
         <!-- pagination -->

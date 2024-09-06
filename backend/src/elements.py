@@ -9,6 +9,46 @@ class ElementBase(NoExtra):
     pass
 
 
+# legacy
+
+# TODO
+class CallElement(ElementBase, extra='ignore'):
+    type: Literal['call'] = 'call'
+    call_id: str
+    api_decoration_available: bool
+    call: dict
+
+
+class Header(ElementBase):
+    type: Literal['header'] = 'header'
+    text: Element
+
+
+class Context(ElementBase):
+    type: Literal['context'] = 'context'
+    elements: list[Element]
+
+
+class Divider(ElementBase):
+    type: Literal['divider'] = 'divider'
+
+
+class Actions(ElementBase):
+    type: Literal['actions'] = 'actions'
+    # TODO
+    elements: list
+
+
+class Button(ElementBase):
+    type: Literal['button'] = 'button'
+    text: Text
+    value: str | None = None
+    action_id: str
+    # url: str | None = None
+    style: Literal['ordered', 'bullet', 'primary'] | None = None
+    # confirm: dict | None = None
+
+
 # styles
 
 class Quote(ElementBase):
@@ -29,6 +69,7 @@ class Italic(ElementBase):
 class Strike(ElementBase):
     type: Literal['strike'] = 'strike'
     element: Element
+    position: Literal['under', 'over', 'through']
 
 
 class Preformat(ElementBase):
@@ -42,6 +83,12 @@ class Preformat(ElementBase):
 class Sequence(ElementBase):
     type: Literal['sequence'] = 'sequence'
     elements: list[Element]
+
+    @classmethod
+    def wrap(cls, elements):
+        if len(elements) == 1:
+            return elements[0]
+        return cls(elements=elements)
 
 
 class Section(ElementBase):
@@ -60,12 +107,6 @@ class List(ElementBase):
 class Text(ElementBase):
     type: Literal['text'] = 'text'
     text: str
-
-
-class Channel(ElementBase):
-    type: Literal['channel'] = 'channel'
-    channel_id: str
-    text: str | None = None
 
 
 class EmojiBase(NoExtra):
@@ -93,6 +134,14 @@ class Color(ElementBase):
     value: str
 
 
+# mentions
+
+class Channel(ElementBase):
+    type: Literal['channel'] = 'channel'
+    channel_id: str
+    text: str | None = None
+
+
 class Broadcast(ElementBase):
     type: Literal['broadcast'] = 'broadcast'
     range: Literal['channel', 'here', 'everyone']
@@ -109,15 +158,13 @@ class UserGroup(ElementBase):
     usergroup_id: str
 
 
-class Button(ElementBase):
-    type: Literal['button'] = 'button'
-    text: Text
-    value: str | None = None
-    action_id: str
-    # url: str | None = None
-    style: Literal['ordered', 'bullet', 'primary'] | None = None
-    # confirm: dict | None = None
+class Contact(ElementBase):
+    type: Literal['contact'] = 'contact'
+    name: str | None
+    phone: str | None
 
+
+# media
 
 class Image(ElementBase):
     type: Literal['image'] = 'image'
@@ -129,6 +176,28 @@ class Icon(ElementBase):
     type: Literal['icon'] = 'icon'
     url: str | None = None
     name: str | None = None
+
+
+class Video(ElementBase):
+    type: Literal['video'] = 'video'
+    url: str | None
+    thumbnail: str | None
+    name: str | None
+
+
+class Audio(ElementBase):
+    type: Literal['audio'] = 'audio'
+    url: str | None
+    thumbnail: str | None
+    name: str | None
+
+
+class File(ElementBase):
+    type: Literal['file'] = 'file'
+    url: str | None
+    name: str | None
+    mimetype: str | None
+    thumbnail: str | None
 
 
 type Element = Union[*ElementBase.__subclasses__()]

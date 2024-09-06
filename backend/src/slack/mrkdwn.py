@@ -1,3 +1,4 @@
+import datetime
 import re
 
 import marko
@@ -35,9 +36,17 @@ def unpack_mrkdwn(text: str):
             yield elements.User(user_id=kind.removeprefix('@'), text=context)
         elif kind.startswith('!'):
             kind = kind.removeprefix('!')
-            assert kind in ('channel', 'here', 'everyone')
-            assert not context or context == kind, text
-            yield elements.Broadcast(range=kind)
+            if kind in ('channel', 'here', 'everyone'):
+                assert not context or context == kind, text
+                yield elements.Broadcast(range=kind)
+
+            else:
+                assert kind.startswith('date'), kind
+                _, stamp, *_ = kind.split('^')
+                stamp = datetime.datetime.fromtimestamp(float(stamp))
+                # TODO
+                yield elements.Text(text=stamp.isoformat())
+
         else:
             if context is not None:
                 context = elements.Text(text=context)
@@ -86,7 +95,7 @@ def _unpack(x: Emphasis):
 
 @_unpack.register
 def _unpack(x: Strikethrough):
-    yield elements.Strike(element=_unpack_many(x.children))
+    yield elements.Strike(element=_unpack_many(x.children), position='through')
 
 
 @_unpack.register

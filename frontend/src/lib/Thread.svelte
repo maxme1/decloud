@@ -1,10 +1,10 @@
 <script lang="ts">
-    import type { Message } from "./timeline";
     import { type ChatInfo } from "$lib";
     import ChatThread from "./ChatThread.svelte";
     import Icon from "@iconify/svelte";
+    import type { AnyMessage } from "./client";
 
-    export let messages: Message[];
+    export let messages: AnyMessage[];
     export let info: ChatInfo;
     let showThread = false;
 </script>

@@ -7,4 +7,6 @@
     export let info: ChatInfo;
 </script>
 
-<Element element={element.element} {info} />
+<div>
+    <Element element={element.element} {info} />
+</div>

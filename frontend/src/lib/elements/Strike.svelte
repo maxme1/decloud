@@ -7,6 +7,9 @@
     export let info: ChatInfo;
 </script>
 
-<span class="line-through"
+<span
+    class:line-through={element.position === "through"}
+    class:underline={element.position === "under"}
+    class:overline={element.position === "over"}
     ><Element element={element.element} {info}></Element></span
 >
