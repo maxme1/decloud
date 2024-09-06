@@ -42,11 +42,12 @@ class Agent(NoExtra):
     id: str
     name: str
     avatar: str | None
+    is_bot: bool
 
 
 class SystemMessage(Base):
     type: Literal['system'] = 'system'
-    event: str
+    event: Literal['call', 'join', 'leave'] | str
     agents: list[str]
 
 

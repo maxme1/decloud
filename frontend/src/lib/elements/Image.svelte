@@ -9,7 +9,7 @@
 </script>
 
 {#if element.url}
-    <ZoomableImage src={element.url} class="max-h-4" />
+    <ZoomableImage src={element.url} class="max-h-48" />
 {:else}
     <Icon icon="tabler:file-x" width="3em" height="3em" />
 {/if}

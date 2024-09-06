@@ -14,7 +14,7 @@
         type Service,
     } from "./timeline";
     import MessagesGroup from "./MessagesGroup.svelte";
-    import ServiceGroup from "./ServiceGroup.svelte";
+    import ServiceGroup from "./SystemContent.svelte";
     import CheckboxList from "./CheckboxList.svelte";
     import {
         UserSettingsOutline,

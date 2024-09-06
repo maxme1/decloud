@@ -4,6 +4,7 @@
     import MessageContent from "./MessageContent.svelte";
     import type { Agent } from "./client";
     import { Tooltip } from "flowbite-svelte";
+    import Icon from "@iconify/svelte";
 
     export let group: AgentMessage[];
     export let agent: Agent | null;
@@ -19,7 +20,7 @@
     }
 </script>
 
-<div class="pb-3 w-full">
+<div class="w-full">
     <div class="flex justify-start w-full">
         <!-- first message -->
         <div>
@@ -39,6 +40,12 @@
                         {agent.name}
                     {/if}
                 </span>
+                {#if agent?.is_bot}
+                    <Icon
+                        icon="lucide:bot"
+                        class="ml-1 w-4 h-4 text-gray-500 dark:text-gray-400"
+                    ></Icon>
+                {/if}
                 <small class="px-1">{timeString(group[0].timestamp)}</small>
                 <Tooltip>{group[0].timestamp}</Tooltip>
             </div>

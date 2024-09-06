@@ -46,22 +46,11 @@ class Divider(BlockBase):
 
 class Actions(BlockBase):
     type: Literal['actions'] = 'actions'
-    elements: list[Element]
+    # TODO
+    elements: list
 
 
 # media
-
-
-class Image(BlockBase):
-    type: Literal['image'] = 'image'
-    url: str | None
-    # alt_text: str
-    # fallback: str
-    # image_width: int
-    # image_height: int
-    # image_bytes: int
-    # is_animated: bool = False
-    # rotation: int = 0
 
 
 class Video(BlockBase):
@@ -80,6 +69,7 @@ class File(BlockBase):
     type: Literal['file'] = 'file'
     url: str | None
     name: str | None
+    mimetype: str | None
 
 
 class Tombstone(BlockBase):

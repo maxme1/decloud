@@ -13,6 +13,16 @@ class ElementBase(NoExtra):
     style: Style | None = None
 
 
+class Quote(ElementBase):
+    type: Literal['quote'] = 'quote'
+    element: Element
+
+
+class Sequence(ElementBase):
+    type: Literal['sequence'] = 'sequence'
+    elements: list[Element]
+
+
 class RichTextElement(ElementBase):
     type: Literal['rich_text_section', 'rich_text_preformatted', 'rich_text_quote']
     elements: list[Element]

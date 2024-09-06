@@ -1,34 +1,17 @@
 <script lang="ts">
-    import {
-        Indicator,
-        Avatar,
-        Badge,
-        Img,
-        Video,
-        Button,
-    } from "flowbite-svelte";
-    import {
-        ForwardOutline,
-        RedoOutline,
-        ReplyOutline,
-        EditOutline,
-        ComputerSpeakerOutline,
-    } from "flowbite-svelte-icons";
-    import type { AgentMessage, Message } from "./timeline";
-    import { filesRoot, type ChatInfo } from "$lib";
-    import ZoomableImage from "./ZoomableImage.svelte";
-    import SectionBlock from "./blocks/Section.svelte";
-    import RichTextBlock from "./blocks/RichText.svelte";
-    import type { SvelteComponent } from "svelte";
+    import { Badge } from "flowbite-svelte";
+    import type { AgentMessage } from "./timeline";
+    import { type ChatInfo } from "$lib";
     import Block from "./blocks/Block.svelte";
     import ChatThread from "./ChatThread.svelte";
     import EmojiBase from "./EmojiBase.svelte";
     import Icon from "@iconify/svelte";
+    import Thread from "./Thread.svelte";
+    import Blocks from "./blocks/Blocks.svelte";
 
     export let message: AgentMessage;
     export let info: ChatInfo;
     const hasBadge = false;
-    let showThread = false;
     let showShared = false;
     // message.edited ||
     // message.reply_to_message_id ||
@@ -41,9 +24,7 @@
 
     <!-- blocks -->
     <div>
-        {#each message.blocks as block}
-            <Block {block} {info}></Block>
-        {/each}
+        <Blocks blocks={message.blocks} {info} />
     </div>
 
     <!-- attachments -->
@@ -111,36 +92,7 @@
         </div>
     {/if}
 
-    <!-- thread -->
-    {#if message.thread.length > 0}
-        <hr />
-        <div class="flex">
-            <button
-                class="flex flex-row items-start hover:bg-gray-200 rounded-md p-1"
-                on:click={() => {
-                    showThread = !showThread;
-                }}
-            >
-                <Icon
-                    icon="system-uicons:thread"
-                    width="2em"
-                    height="2em"
-                    color="black"
-                />
-                {#if !showThread}
-                    <div class="self-center px-1">
-                        {message.thread.length} messages
-                    </div>
-                {/if}
-            </button>
-
-            {#if showThread}
-                <div class="pl-2 bg-slate-100 w-full">
-                    <ChatThread {info} messages={message.thread}></ChatThread>
-                </div>
-            {/if}
-        </div>
-    {/if}
+    <Thread messages={message.thread} {info}></Thread>
 </div>
 
 <!-- <div class="absolute bottom-0 right-0 flex">

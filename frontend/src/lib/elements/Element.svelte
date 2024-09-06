@@ -15,6 +15,8 @@
     import UserGroup from "./UserGroup.svelte";
     import Markdown from "./Markdown.svelte";
     import Image from "./Image.svelte";
+    import Quote from "./Quote.svelte";
+    import Sequence from "./Sequence.svelte";
 
     export let element: RichText["elements"][0];
     export let info: ChatInfo;
@@ -34,6 +36,8 @@
         ["usergroup", UserGroup],
         ["mrkdwn", Markdown],
         ["image", Image],
+        ["quote", Quote],
+        ["sequence", Sequence],
     ]);
 </script>
 

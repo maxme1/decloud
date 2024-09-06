@@ -5,6 +5,7 @@
         Badge,
         ButtonGroup,
         Button,
+        Tooltip,
     } from "flowbite-svelte";
     import { List, Li } from "flowbite-svelte";
     import {
@@ -14,7 +15,7 @@
         type Service,
     } from "./timeline";
     import MessagesGroup from "./MessagesGroup.svelte";
-    import ServiceGroup from "./ServiceGroup.svelte";
+    import ServiceGroup from "./SystemContent.svelte";
     import CheckboxList from "./CheckboxList.svelte";
     import {
         UserSettingsOutline,
@@ -30,6 +31,10 @@
         type SystemMessage,
     } from "$lib/client";
     import type { ChatInfo } from "$lib";
+    import MessageContentDispatch from "./MessageContentDispatch.svelte";
+    import Icon from "@iconify/svelte";
+    import GroupImage from "./GroupImage.svelte";
+    import GroupHeader from "./GroupHeader.svelte";
 
     export let messages: Message[];
     export let info: ChatInfo;
@@ -74,18 +79,13 @@
         );
     }
 
-    function isMessage(group: Message[]): group is AgentMessage[] {
-        return group[0].type === "agent";
-    }
-    function isService(group: Message[]): group is SystemMessage[] {
-        return group[0].type === "system";
-    }
-    function getAgent(group: AgentMessage[]): Agent | null {
-        if (group[0].agent_id == null) return null;
-        const agent = info.agents.find((x) => x.id == group[0].agent_id);
-        if (agent === undefined)
-            console.log("Unknown agent: " + group[0].agent_id);
-        return agent ?? null;
+    function timeString(timestamp: string) {
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString(undefined, {
+            hour: "2-digit",
+            minute: "2-digit",
+            hourCycle: "h24",
+        });
     }
 </script>
 
@@ -101,29 +101,64 @@
             <List tag="ul" list="none">
                 {#each groups as group}
                     <Li>
-                        <div
-                            class="flex items-center space-x-4 rtl:space-x-reverse"
-                        >
-                            {#if isMessage(group)}
-                                <MessagesGroup
-                                    {group}
-                                    {info}
-                                    agent={getAgent(group)}
-                                />
-                            {:else if isService(group)}
-                                <ServiceGroup {group} {info} />
-                            {:else}
-                                {console.log(
-                                    "Unknown group type: " + group[0].type,
-                                )}
-                            {/if}
-                            <!-- <div class="flex-shrink-0">
-                        <img
-                        class="w-8 h-8 rounded-full"
-                        src="/images/profile-picture-1.webp"
-                        alt="Neil profile"
-                        />
-                    </div> -->
+                        <div class="flex items-center mb-3">
+                            <div class="w-full">
+                                <div class="flex justify-start w-full">
+                                    <!-- first message -->
+                                    <div class="w-10">
+                                        <GroupImage {group} {info} />
+                                    </div>
+                                    <div class="ml-1 px-1 w-full mb-1">
+                                        <div
+                                            class="flex justify-start leading-none items-center mb-1"
+                                        >
+                                            <GroupHeader {group} {info} />
+                                            <small class="px-1"
+                                                >{timeString(
+                                                    group[0].timestamp,
+                                                )}</small
+                                            >
+                                            <Tooltip
+                                                >{group[0].timestamp}</Tooltip
+                                            >
+                                        </div>
+                                        <div
+                                            class="hover:bg-gray-100 flex w-full rounded"
+                                        >
+                                            <MessageContentDispatch
+                                                message={group[0]}
+                                                {info}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                {#each group.slice(1) as message}
+                                    <div
+                                        class="flex time-parent w-full justify-start"
+                                    >
+                                        <div class="w-10">
+                                            <small class="time-child"
+                                                >{timeString(
+                                                    message.timestamp,
+                                                )}</small
+                                            >
+                                            <Tooltip
+                                                >{group[0].timestamp}</Tooltip
+                                            >
+                                        </div>
+                                        <div class="ml-1 px-1 w-full mb-1">
+                                            <div
+                                                class="hover:bg-gray-100 flex w-full rounded"
+                                            >
+                                                <MessageContentDispatch
+                                                    {message}
+                                                    {info}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                {/each}
+                            </div>
                         </div>
                     </Li>
                 {/each}
@@ -147,7 +182,6 @@
                         <ChevronLeftOutline class="w-2.5 h-2.5" />
                     </Button>
                     {#each pages as p}
-                        <!-- class:font-semibold={p == page} -->
                         <Button
                             class="px-3 py-1 cursor-pointer"
                             on:click={() => {
@@ -172,3 +206,9 @@
         {/if}
     {/if}
 </div>
+
+<style>
+    .time-parent:not(:hover) .time-child {
+        visibility: hidden;
+    }
+</style>

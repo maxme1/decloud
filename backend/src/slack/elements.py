@@ -9,7 +9,7 @@ from .. import elements
 from ..settings import settings
 from ..utils import NoExtra
 from .mrkdwn import parse
-from .utils import standard_emojis
+from .utils import file_url, standard_emojis
 
 
 # TODO: customize by chat
@@ -38,6 +38,14 @@ class RichTextElement(ElementBase):
     indent: int | None = None
     border: int | None = None
     offset: int | None = None
+
+    def convert(self):
+        if self.type == 'rich_text_quote':
+            assert not self.indent and not self.offset, (self.indent, self.offset)
+            assert not self.style, self.style
+            return elements.Quote(element=elements.Sequence(elements=[x.convert() for x in self.elements]))
+
+        return super().convert()
 
 
 class RichTextList(ElementBase):
@@ -79,12 +87,16 @@ class Emoji(ElementBase):
     name: str | None
     unicode: str | None = None
     skin_tone: int | None = None
+    # TODO: ???
+    url: str | None = None
+    display_url: str | None = None
+    display_team_id: str | None = None
 
     def convert(self):
         name = self.name
         return elements.Emoji(
-            url=custom_emojis().get(name), unicode=self.unicode or standard_emojis().get(name), name=name,
-            skin_tone=self.skin_tone,
+            url=custom_emojis().get(name), unicode=self.unicode or standard_emojis().get(name),
+            name=name, skin_tone=self.skin_tone,
         )
 
 
@@ -94,6 +106,15 @@ class Link(ElementBase):
     text: str | None = None
 
     unsafe: bool | None = None
+
+
+class Image(ElementBase):
+    type: Literal['image']
+    image_url: str
+    alt_text: str | None = None
+
+    def convert(self):
+        return elements.ImageElement(url=file_url(self.image_url))
 
 
 class Color(ElementBase):
@@ -121,9 +142,9 @@ class Button(ElementBase):
     text: PlainText
     value: str | None = None
     action_id: str
-    # url: str | None = None
+    url: str | None = None
     style: StyleStr | None = None
-    # confirm: dict | None = None
+    confirm: dict | None = None
 
 
 type Element = Union[*ElementBase.__subclasses__()]

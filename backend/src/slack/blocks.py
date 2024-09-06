@@ -4,7 +4,7 @@ from typing import Literal, Union
 
 from pydantic import Field, model_validator
 
-from .. import blocks
+from .. import blocks, elements
 from ..utils import NoExtra
 from .elements import Element, PlainText
 from .utils import file_url
@@ -82,7 +82,7 @@ class Image(BlockBase):
     rotation: int = 0
 
     def convert(self):
-        return blocks.Image(url=file_url(self.image_url))
+        return blocks.RichText(elements=[elements.ImageElement(url=file_url(self.image_url))])
 
 
 class Actions(BlockBase):

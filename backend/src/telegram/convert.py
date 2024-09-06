@@ -89,25 +89,28 @@ def convert_element(entity: PlainLike):
 
 
 def generate_blocks(msg: Message):
+    def image(**kwargs):
+        return RichText(elements=[ImageElement(**kwargs)])
+
     if msg.photo:
-        yield Image(
+        yield image(
             url=file_url(msg.photo)
         )
 
     match msg.media_type:
         case 'sticker':
             if msg.file.endswith('.tgs'):
-                yield Image(
+                yield image(
                     url=file_url(msg.thumbnail)
                 )
             else:
-                yield Image(
+                yield image(
                     url=file_url(msg.file)
                 )
 
         case 'animation':
             if msg.mime_type == 'image/gif':
-                yield Image(
+                yield image(
                     url=file_url(msg.file)
                 )
             else:

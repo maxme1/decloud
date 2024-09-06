@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from typing import Literal, Union
 
-from pydantic import BaseModel, Field, TypeAdapter
+from pydantic import BaseModel, Field, TypeAdapter, model_validator
 
 from ..utils import NoExtra
 from .blocks import Block
+
 
 TimeStr = str
 
@@ -138,18 +139,22 @@ class FileTombstone(NoExtra):
     id: str
 
 
-class FileExternal(BaseModel):
-    mode: Literal['external']
+class CommonFields(BaseModel):
     id: str
-
-    created: int
+    file_access: Literal['access_denied', 'visible']
     timestamp: int
+    created: int
+    user: str
+
+
+class FileExternal(CommonFields, BaseModel):
+    mode: Literal['external']
+
     name: str
     title: str
     mimetype: str
     filetype: str
     pretty_type: str
-    user: str
     editable: bool
     size: int
     is_external: bool
@@ -163,21 +168,16 @@ class FileExternal(BaseModel):
     is_starred: bool
     user_team: str
     has_rich_preview: bool
-    file_access: str
 
 
-class FileInternal(BaseModel):
-    mode: Literal['snippet', 'hosted', 'quip']
-    id: str
+class FileInternal(CommonFields, BaseModel):
+    mode: Literal['snippet', 'hosted', 'quip', 'email']
 
-    created: int
-    timestamp: int
     name: str
     title: str
     mimetype: str
     filetype: str
     pretty_type: str
-    user: str
     editable: bool
     size: int
     is_external: bool
@@ -193,10 +193,18 @@ class FileInternal(BaseModel):
     is_starred: bool
     user_team: str
     has_rich_preview: bool
-    file_access: str
 
 
-type File = FileTombstone | FileExternal | FileInternal
+class UnknownFile(CommonFields, BaseModel):
+    pass
+
+    # @model_validator(mode='before')
+    # def _p(cls, values):
+    #     print(values)
+    #     return values
+
+
+type File = FileTombstone | FileExternal | FileInternal | UnknownFile
 
 
 class UserMessage(Message, ThreadMixin, Agent):
@@ -225,6 +233,7 @@ class BotMessage(Message, ThreadMixin, Agent):
 class EventMessage(Message):
     user: str
     subtype: str
+    team: str | None = None
 
 
 class ChannelJoin(EventMessage):
@@ -253,8 +262,21 @@ class ChannelPurpose(EventMessage):
     purpose: str
 
 
+class GroupPurpose(EventMessage):
+    subtype: Literal['group_purpose']
+    purpose: str
+
+
+class GroupJoin(EventMessage):
+    subtype: Literal['group_join']
+
+
 class ChannelArchive(EventMessage):
     subtype: Literal['channel_archive']
+
+
+class ChannelUnarchive(EventMessage):
+    subtype: Literal['channel_unarchive']
 
 
 class ReminderAdd(EventMessage):
@@ -298,10 +320,12 @@ class AppConversationJoin(EventMessage):
 
 class ThreadBroadcast(EventMessage, ThreadMixin):
     subtype: Literal['thread_broadcast']
-    root: dict
-    thread_ts: TimeStr
+    root: dict | None = None
+    thread_ts: TimeStr | None = None
+    user: str | None = None
 
     files: list[File] = Field(default_factory=list)
+    x_files: list[str] = Field(default_factory=list)
     upload: bool | None = None
     display_as_bot: bool | None = None
 
@@ -315,10 +339,9 @@ class ReplyBroadcast(EventMessage):
 class HuddleThread(EventMessage, ThreadMixin):
     subtype: Literal['huddle_thread']
 
-    team: str
 
-
-class Tombstone(EventMessage, Message, ThreadMixin):
+# TODO
+class Tombstone(EventMessage, Message, ThreadMixin, extra='ignore'):
     subtype: Literal['tombstone']
     hidden: bool
 
@@ -330,6 +353,7 @@ class ShRoomCreated(EventMessage):
     no_notifications: bool
     permalink: str
     room: dict
+    team: str | None = None
 
 
 class ChannelCanvasUpdated(EventMessage, extra='ignore'):

@@ -22,9 +22,12 @@ class Slack(ChatInterface):
         bots = deli.load(settings.slack_root / 'bots.json')
         return ChatInfo(
             agents=[
-                       Agent(id=x['id'], name=x['name'], avatar=x.get('profile', {}).get('image_48')) for x in users
+                       Agent(
+                           id=x['id'], name=x['name'], avatar=x.get('profile', {}).get('image_48'),
+                           is_bot=x['name'] == 'slackbot',
+                       ) for x in users
                    ] + [
-                       Agent(id=x['id'], name=x['name'], avatar=None) for x in bots
+                       Agent(id=x['id'], name=x['name'], avatar=None, is_bot=True) for x in bots
                    ],
         )
 

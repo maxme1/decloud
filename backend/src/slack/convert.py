@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import multimethod
+from jboc import collect
 
-from ..blocks import Context, File, Image, RichText, Section, Tombstone
+from ..blocks import Context, File, RichText, Section, Tombstone
 from ..elements import EmojiBase, ImageElement, Link, PlainText
 from ..schema import AgentMessage, Reaction, Shared, SystemMessage
 from .elements import Mrkdwn, custom_emojis
-from .schema import BotMessage, EventMessage, ThreadBroadcast, UserMessage
+from .schema import BotMessage, EventMessage, HuddleThread, ThreadBroadcast, UnknownFile, UserMessage
 from .utils import file_url, standard_emojis
 
 
@@ -17,22 +18,8 @@ def convert(msg):
 
 @convert.register
 def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
-    replies = msg.replies
-    if replies:
-        assert replies[0].ts == msg.ts
-        replies = replies[1:]
-
-    reactions = []
-    for reaction in msg.reactions:
-        reaction_name, *tone = reaction.name.split('::')
-        reactions.append(Reaction(
-            emoji=EmojiBase(
-                name=reaction_name, unicode=standard_emojis().get(reaction_name),
-                # TODO: skin
-                url=custom_emojis().get(reaction_name), skin_tone=None,
-            ),
-            users=reaction.users
-        ))
+    thread = get_thread(msg.replies, msg)
+    reactions = get_reactions(msg)
 
     blocks = [x.convert() for x in msg.blocks]
     replied = []
@@ -50,6 +37,11 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
             if attachment.blocks:
                 continue
 
+            dump.pop('fallback', None)
+            dump.pop('ts', None)
+            dump.pop('id', None)
+            dump.pop('color', None)
+
             if attachment.is_share and attachment.message_blocks:
                 # dump.pop('message_blocks')
                 assert attachment.channel_id
@@ -61,7 +53,6 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
                 dump.pop('is_msg_unfurl')
                 dump.pop('channel_id')
                 dump.pop('author_id')
-                dump.pop('ts')
 
                 shared.append(Shared(message=AgentMessage(
                     blocks=[x.convert() for x in attachment.message_blocks[0].message.blocks],
@@ -106,14 +97,14 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
 
             if attachment.title:
                 dump.pop('title')
-                dump.pop('title_link')
+                dump.pop('title_link', None)
 
                 blocks.append(Section(elements=[
                     PlainText(text=attachment.title, emoji=False) if not attachment.title_link else
                     Link(url=attachment.title_link, text=attachment.title)
                 ]))
 
-            dump.pop('fields')
+            dump.pop('fields', None)
             for field in attachment.fields:
                 if field.title:
                     blocks.append(Section(elements=[no_mrkdwn(field.title)]))
@@ -128,11 +119,6 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
                     PlainText(text=attachment.footer, emoji=False)
                 ]))
 
-            dump.pop('fallback')
-            dump.pop('ts')
-            dump.pop('id')
-            dump.pop('color')
-
         blocks.extend(
             Section(elements=[PlainText(text=f'\nATTACHMENT: !!!! {x}', emoji=False)]) for x in att_blocks if x
         )
@@ -142,7 +128,7 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
 
     return AgentMessage(
         blocks=blocks, id=msg.ts, agent_id=msg.user or msg.bot_id, timestamp=msg.ts,
-        thread=list(map(convert, replies)), reactions=reactions, reply_to=replied, shared=shared,
+        thread=thread, reactions=reactions, reply_to=replied, shared=shared,
     )
 
 
@@ -152,17 +138,51 @@ def no_mrkdwn(text):
 
 @convert.register
 def convert(msg: EventMessage):
+    events = dict(
+        huddle_thread='call',
+        channel_join='join',
+        channel_leave='leave',
+    )
+    blocks = []
+    if msg.subtype == 'reminder_add':
+        blocks.append(RichText(elements=[PlainText(text=msg.text, emoji=False)]))
+
+    if msg.subtype not in events and msg.subtype not in ('reminder_add',):
+        print('missing subtype', msg.subtype)
+
     return SystemMessage(
-        id=msg.ts, blocks=[], timestamp=msg.ts, thread=[], event=msg.subtype, reactions=[],
-        agents=[msg.user] if msg.user else [],
+        id=msg.ts, blocks=blocks, timestamp=msg.ts, thread=get_thread(getattr(msg, 'replies', []), msg),
+        event=events.get(msg.subtype, msg.subtype),
+        reactions=get_reactions(msg), agents=[msg.user] if msg.user else [],
     )
 
 
+def get_thread(thread, msg):
+    if thread:
+        assert thread[0].ts == msg.ts
+        thread = thread[1:]
+    return list(map(convert, thread))
+
+
+@collect
+def get_reactions(msg):
+    for reaction in msg.reactions:
+        reaction_name, *tone = reaction.name.split('::')
+        yield Reaction(
+            emoji=EmojiBase(
+                name=reaction_name, unicode=standard_emojis().get(reaction_name),
+                # TODO: skin
+                url=custom_emojis().get(reaction_name), skin_tone=None,
+            ),
+            users=reaction.users
+        )
+
+
 def convert_file(file):
+    if isinstance(file, UnknownFile):
+        return File(url=file_url(file.id), name=None)
+
     if file.mode == 'tombstone':
         return Tombstone()
 
-    if file.mimetype.startswith('image/'):
-        return Image(url=file_url(file.id))
-
-    return File(url=file_url(file.id), name=file.name)
+    return File(url=file_url(file.id), name=file.name, mimetype=file.mimetype)
