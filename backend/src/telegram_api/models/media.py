@@ -112,7 +112,7 @@ def file_url(file: File | None) -> str | None:
 
     file_id = file.remote.id
     if file_id not in id_to_file():
-        print(f'File {file_id} not found')
+        # print(f'File {file_id} not found')
         return
 
     return f'{settings.base_url}/files/telegramapi/{file_id}'

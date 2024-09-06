@@ -1,3 +1,6 @@
+import deli
+import rich
+import typer
 from jboc import collect
 from pydantic import BaseModel
 
@@ -22,3 +25,22 @@ def split_into_segments(xs, predicate):
             current = [x]
 
     yield value, current
+
+
+def load_backup(path):
+    if path.exists():
+        try:
+            return deli.load(path)
+        except Exception as e:
+            rich.print(f'Error loading {path}: {e}')
+            raise typer.Exit(1) from e
+
+    return []
+
+
+def save_backup(data, path):
+    tmp = path.with_stem('tmp-' + path.stem)
+    deli.save(data, tmp)
+    if path.exists():
+        path.unlink()
+    tmp.rename(path)

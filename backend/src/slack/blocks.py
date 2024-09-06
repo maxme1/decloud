@@ -46,7 +46,7 @@ class Section(BlockBase):
 
     @model_validator(mode='after')
     def _mutex(cls, v):
-        assert bool(v.element) != bool(v.fields), (v.element, v.fields)
+        assert bool(v.text) != bool(v.fields), (v.text, v.fields)
         return v
 
     def convert(self):
@@ -86,7 +86,7 @@ class Image(BlockBase):
     rotation: int = 0
 
     def convert(self):
-        return elements.Image(url=file_url(self.image_url))
+        return elements.Image(url=file_url(self.image_url), name=self.alt_text)
 
 
 class Actions(BlockBase):

@@ -9,7 +9,7 @@ from ..utils import split_into_segments
 from .elements import custom_emojis
 from .mrkdwn import convert_mrkdwn
 from .schema import BotMessage, EventMessage, ThreadBroadcast, UnknownFile, UserMessage
-from .utils import file_url, standard_emojis
+from .utils import file_url, standard_emojis, to_unicode
 
 
 @multimethod.multimethod
@@ -87,7 +87,7 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
             if attachment.author_name or attachment.author_icon:
                 elts = []
                 if attachment.author_icon:
-                    elts.append(Icon(url=attachment.author_icon))
+                    elts.append(Icon(url=attachment.author_icon, name=attachment.author_name))
                 if attachment.author_name:
                     elts.append(
                         Link(element=Text(text=attachment.author_name), url=attachment.author_link)
@@ -136,7 +136,7 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
 
                 elts = []
                 if attachment.footer_icon:
-                    elts.append(Icon(url=attachment.footer_icon))
+                    elts.append(Icon(url=attachment.footer_icon, name=None))
                 elts.append(no_mrkdwn(attachment.footer, True))
 
                 elements.append(Context(elements=elts))
@@ -201,7 +201,7 @@ def get_reactions(msg):
         reaction_name, *tone = reaction.name.split('::')
         yield Reaction(
             emoji=EmojiBase(
-                name=reaction_name, unicode=standard_emojis().get(reaction_name),
+                name=reaction_name, unicode=to_unicode(standard_emojis().get(reaction_name)),
                 # TODO: skin
                 url=custom_emojis().get(reaction_name), skin_tone=None,
             ),

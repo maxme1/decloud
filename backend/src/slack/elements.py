@@ -9,7 +9,7 @@ from .. import elements
 from ..settings import settings
 from ..utils import NoExtra, split_into_segments
 from .mrkdwn import convert_mrkdwn
-from .utils import file_url, standard_emojis
+from .utils import file_url, standard_emojis, to_unicode
 
 
 # TODO: customize by chat
@@ -142,6 +142,9 @@ class Channel(ElementBase):
     type: Literal['channel']
     channel_id: str
 
+    def convert(self):
+        return _apply_style(elements.Channel(channel_id=self.channel_id, text=None), self.style)
+
 
 class Mrkdwn(ElementBase):
     type: Literal['mrkdwn']
@@ -167,7 +170,7 @@ class Emoji(ElementBase):
         # assert not self.style, self.style
         name = self.name
         return elements.Emoji(
-            url=custom_emojis().get(name), unicode=self.unicode or standard_emojis().get(name),
+            url=custom_emojis().get(name), unicode=to_unicode(self.unicode) or standard_emojis().get(name),
             name=name, skin_tone=self.skin_tone,
         )
 
@@ -209,6 +212,9 @@ class Broadcast(ElementBase):
 class User(ElementBase):
     type: Literal['user']
     user_id: str
+
+    def convert(self):
+        return _apply_style(elements.User(user_id=self.user_id, element=None), self.style)
 
 
 class UserGroup(ElementBase):

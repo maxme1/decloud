@@ -37,7 +37,14 @@
             }
         }
 
-        return { agent_id, timestamp, elements };
+        return {
+            agent_id,
+            timestamp,
+            elements,
+            channel_id: shared.channel_id,
+            message_id: shared.id,
+            source: $activeChannel?.channel.source,
+        };
     }
 </script>
 
@@ -115,6 +122,17 @@
                                                     >{shared.timestamp}</Tooltip
                                                 >
                                             {/if}
+                                            {#if shared.channel_id && shared.message_id && shared.source}
+                                                <a
+                                                    class="flex flex-row items-start hover:bg-gray-200 rounded-md p-1"
+                                                    href={`/channels/${shared.source}/${shared.channel_id}#${shared.message_id}`}
+                                                >
+                                                    <Icon
+                                                        icon="fluent:calendar-reply-16-filled"
+                                                        color="black"
+                                                    />
+                                                </a>
+                                            {/if}
                                         </div>
                                         <div
                                             class="hover:bg-gray-100 flex w-full rounded"
@@ -138,23 +156,3 @@
 
     <Thread messages={message.thread} {info}></Thread>
 </div>
-
-<!-- <div class="absolute bottom-0 right-0 flex">
-        <small class="time-child bg-white rounded px-1"
-            >{message.timestamp}</small
-        >
-
-        {#if hasBadge}
-            <Badge color="dark" rounded class="px-2.5 py-0.5 ml-auto relative">
-
-                {#if message.reply_to_message_id !== undefined}
-                    <div class="flex items-center badge-parent">
-                        <ReplyOutline size="xs" class="me-1" />
-                        <span class="badge-child">Replied</span>
-                    </div>
-                {/if}
-
-
-            </Badge>
-        {/if}
-    </div> -->

@@ -6,9 +6,16 @@
     import { onMount } from "svelte";
     import { activeChannel, channels } from "$lib/store";
 
+    let focusedMessage: string | null = null;
+
     page.subscribe(async (value) => {
         const chatId: string = value.params.id;
         const source: string = value.params.source;
+        if (value.url.hash === "") {
+            focusedMessage = null;
+        } else {
+            focusedMessage = value.url.hash.slice(1);
+        }
 
         if ($channels.length === 0) {
             $channels = await ApiService.chatsChatsGet();
@@ -46,6 +53,7 @@
                 channel={$activeChannel.channel}
                 messages={$activeChannel.messages}
                 info={$activeChannel.info}
+                {focusedMessage}
             ></ChatTimeline>
         </div>
     {/if}

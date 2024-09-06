@@ -58,6 +58,7 @@ class FormattedText(TypeDispatch):
             (offset, max(offset + x.length for x in entities), sorted(entities, key=lambda x: x.length))
             for offset, entities in groups
         ]
+        # FIXME
         # validate
         for a, b in zip(groups, groups[1:]):
             assert a[1] <= b[0]

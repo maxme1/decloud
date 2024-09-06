@@ -18,6 +18,7 @@ from .models.media import File
 from .models.message import Message
 from .models.sender import SenderUser
 from .models.user import User
+from ..utils import load_backup, save_backup
 
 
 # https://core.telegram.org/tdlib/docs/classtd_1_1td__api_1_1_function.html
@@ -73,14 +74,14 @@ def download(client, storage):
 
     # update the chats list
     chats_path = storage / 'chats.json'
-    chats = load(chats_path)
+    chats = load_backup(chats_path)
 
     if update_chats:
         for chat in set(chats_ids) - {x['id'] for x in chats}:
             chat = wait(client.get_chat(chat))
             chats.append(chat)
 
-        save(chats, chats_path)
+        save_backup(chats, chats_path)
 
     # update the messages and gather files and users
     chat_files, user_ids = defaultdict(list), set()
@@ -88,7 +89,7 @@ def download(client, storage):
         for chat in tqdm(chats, desc='Downloading messages'):
             chat = Chat.model_validate(chat)
             messages_path = storage / f'messages/{chat.id}.json'
-            messages = load(messages_path)
+            messages = load_backup(messages_path)
 
             if update_messages:
                 with tqdm(
@@ -100,7 +101,7 @@ def download(client, storage):
 
                     # drop duplicates
                     messages = list({x['id']: x for x in messages}.values())
-                    save(messages, messages_path)
+                    save_backup(messages, messages_path)
                     time.sleep(1)
 
             if update_files or update_users:
@@ -116,7 +117,7 @@ def download(client, storage):
 
     # update the users
     users_path = storage / 'users.json'
-    users = load(users_path)
+    users = load_backup(users_path)
 
     if update_users:
         for user in user_ids - {x['id'] for x in users}:
@@ -128,7 +129,7 @@ def download(client, storage):
 
             users.append(user)
 
-        save(users, users_path)
+        save_backup(users, users_path)
 
     # gather more files
     files = []
@@ -150,8 +151,8 @@ def download(client, storage):
         files_root = storage / 'files'
         files_db_path = files_root / 'files.json'
         skipped_db_path = files_root / 'skipped.json'
-        db = load(files_db_path)
-        skipped = set(load(skipped_db_path))
+        db = load_backup(files_db_path)
+        skipped = set(load_backup(skipped_db_path))
         n_skipped = 0
         with tqdm(
                 {x.remote.id for x in files} - {x['remote_id'] for x in db} - skipped, desc='Downloading files'
@@ -176,31 +177,12 @@ def download(client, storage):
                     time.sleep(0.1)
 
             except KeyboardInterrupt as e:
-                save(db, files_db_path)
-                save(list(skipped), skipped_db_path)
+                save_backup(db, files_db_path)
+                save_backup(list(skipped), skipped_db_path)
                 raise typer.Exit(1) from e
 
-            save(db, files_db_path)
-            save(list(skipped), skipped_db_path)
-
-
-def load(path):
-    if path.exists():
-        try:
-            return deli.load(path)
-        except Exception as e:
-            rich.print(f'Error loading {path}: {e}')
-            raise typer.Exit(1) from e
-
-    return []
-
-
-def save(data, path):
-    tmp = path.with_stem('tmp-' + path.stem)
-    deli.save(data, tmp)
-    if path.exists():
-        path.unlink()
-    tmp.rename(path)
+            save_backup(db, files_db_path)
+            save_backup(list(skipped), skipped_db_path)
 
 
 def wait(response):
@@ -232,9 +214,9 @@ def get_all_messages(client, chat_id, to_message_id: int | None = None):
 
 def download_file(client, file_id, storage):
     db_path = storage / 'files.json'
-    db = load(db_path)
+    db = load_backup(db_path)
     _update_files_db(client, file_id, storage, db)
-    save(db, db_path)
+    save_backup(db, db_path)
 
 
 def _update_files_db(client, file_id, storage, db) -> bool:

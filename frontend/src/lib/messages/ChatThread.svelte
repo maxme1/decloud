@@ -12,6 +12,7 @@
     import type { AnyMessage } from "../client";
 
     export let messages: AnyMessage[];
+    export let focusedMessage: string | null;
     export let info: ChatInfo;
 
     // pagination
@@ -20,6 +21,7 @@
     let maxPage = 0;
     let page = 0;
     let pages: number[] = [];
+    let scrollToFocus: string | null = null;
 
     let groups: AnyMessage[][] = [];
 
@@ -27,7 +29,18 @@
         const edges = 2;
         const around = 5;
         maxPage = Math.ceil(messages.length / perPage);
-        page = Math.min(page, maxPage);
+
+        if (focusedMessage !== null) {
+            let index = messages.findIndex((m) => m.id === focusedMessage);
+            if (index < 0) {
+                index = 0;
+            }
+            // because the messages are reversed
+            page = Math.floor((messages.length - index) / perPage);
+            scrollToFocus = focusedMessage;
+            focusedMessage = null;
+        }
+        page = Math.max(Math.min(page, maxPage - 1), 0);
         pages = Array.from(
             new Set([
                 ...Array.from(
@@ -53,6 +66,15 @@
                 .toReversed(),
         );
     }
+
+    function scrollIntoView(node: any, scroll: any) {
+        function update(scroll: any) {
+            if (scroll) node.scrollIntoView({ behavior: "smooth" });
+        }
+
+        update(scroll);
+        return { update };
+    }
 </script>
 
 <div class="flex flex-col overflow-hidden">
@@ -66,6 +88,7 @@
         <div class="overflow-y-auto break-words" bind:this={messagesElement}>
             <ul>
                 {#each groups as group}
+                    {@const first = group[0]}
                     <li>
                         <div class="flex items-center mb-3">
                             <div class="w-full">
@@ -81,18 +104,21 @@
                                             <GroupHeader {group} {info} />
                                             <small class="px-1"
                                                 >{timeString(
-                                                    group[0].timestamp,
+                                                    first.timestamp,
                                                 )}</small
                                             >
-                                            <Tooltip
-                                                >{group[0].timestamp}</Tooltip
-                                            >
+                                            <Tooltip>{first.timestamp}</Tooltip>
                                         </div>
                                         <div
                                             class="hover:bg-gray-100 flex w-full rounded"
+                                            id={first.id}
+                                            use:scrollIntoView={first.id ===
+                                                scrollToFocus}
+                                            class:bg-yellow-50={first.id ===
+                                                scrollToFocus}
                                         >
                                             <MessageContentDispatch
-                                                message={group[0]}
+                                                message={first}
                                                 {info}
                                             />
                                         </div>
@@ -115,6 +141,11 @@
                                         <div class="ml-1 px-1 w-full mb-1">
                                             <div
                                                 class="hover:bg-gray-100 flex w-full rounded"
+                                                id={message.id}
+                                                use:scrollIntoView={message.id ===
+                                                    scrollToFocus}
+                                                class:bg-yellow-50={message.id ===
+                                                    scrollToFocus}
                                             >
                                                 <MessageContentDispatch
                                                     {message}

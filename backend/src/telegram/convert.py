@@ -32,13 +32,13 @@ def convert(msg: Service):
 
 
 def generate_blocks(msg: Message):
+    name = msg.file_name or msg.title or None
     if msg.photo:
         yield Image(
-            url=file_url(msg.photo)
+            url=file_url(msg.photo), name=name,
         )
 
     thumbnail = file_url(msg.thumbnail)
-    name = msg.file_name or msg.title or None
     url = file_url(msg.file)
     match msg.media_type:
         case 'sticker':

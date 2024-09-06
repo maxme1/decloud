@@ -5,6 +5,7 @@
     import { elementWalker } from "../utils";
 
     export let messages: AnyMessage[];
+    export let focusedMessage: string | null;
     export let channel: Chat;
     export let info: ChatInfo;
 
@@ -191,5 +192,6 @@
             return event_types.size == 0 || event_enabled.has(message.event);
         }
     })}
+    {focusedMessage}
     {info}
 />

@@ -6,11 +6,7 @@ from starlette.responses import Response
 
 from .interface import Chat, ChatInfo, ChatInterface
 from .schema import AnyMessage
-from .settings import settings
-from .slack.interface import Slack
 from .static import serve
-from .telegram.interface import Telegram
-from .telegram_api.interface import TelegramAPI
 
 
 class TypeSchemaApp(FastAPI):
@@ -38,12 +34,8 @@ def get_agents(interface):
 @app.get('/chats')
 async def chats() -> list[Chat]:
     result = []
-    if settings.telegram_api_root:
-        result.extend(Telegram().gather_chats())
-    if settings.slack_api_root:
-        result.extend(Slack().gather_chats())
-    if settings.telegram_root:
-        result.extend(TelegramAPI().gather_chats())
+    for interface in ChatInterface.all().values():
+        result.extend(interface.gather_chats())
 
     return result
 

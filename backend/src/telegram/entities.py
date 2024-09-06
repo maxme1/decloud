@@ -23,7 +23,7 @@ class PlainLike(NoExtra):
 
         match self.type:
             case 'link':
-                return elements.Link(url=text)
+                return elements.Link(url=text, element=None)
             case 'mention':
                 return elements.User(user_id=text)
             case 'bold':
