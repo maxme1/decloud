@@ -89,7 +89,7 @@ class Message(MessageBase):
     contact_vcard: StoredFile = None
 
     location_information: LocationInformation | None = None
-    live_location_period_seconds: int | None = None
+    live_location_period_seconds: int | None = None  # TODO
     place_name: str | None = None
     address: str | None = None
 

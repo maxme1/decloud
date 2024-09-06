@@ -28,6 +28,7 @@
     import Header from "./Header.svelte";
     import File from "./File.svelte";
     import Contact from "./Contact.svelte";
+    import Location from "./Location.svelte";
 
     export let element: Element;
     export let info: ChatInfo;
@@ -37,7 +38,9 @@
         ["channel", Channel],
         ["broadcast", Broadcast],
         ["usergroup", UserGroup],
+
         ["contact", Contact],
+        ["location", Location],
 
         ["button", Button],
         // ["call", Call],

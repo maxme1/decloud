@@ -158,10 +158,20 @@ class UserGroup(ElementBase):
     usergroup_id: str
 
 
+# misc
+
 class Contact(ElementBase):
     type: Literal['contact'] = 'contact'
     name: str | None
     phone: str | None
+
+
+class Location(ElementBase):
+    type: Literal['location'] = 'location'
+    name: str | None
+    address: str | None
+    latitude: float | None
+    longitude: float | None
 
 
 # media
@@ -178,11 +188,17 @@ class Icon(ElementBase):
     name: str | None = None
 
 
+class Sticker(ElementBase):
+    type: Literal['sticker'] = 'sticker'
+    url: str | None = None
+
+
 class Video(ElementBase):
     type: Literal['video'] = 'video'
     url: str | None
     thumbnail: str | None
     name: str | None
+    size: int | None
 
 
 class Audio(ElementBase):

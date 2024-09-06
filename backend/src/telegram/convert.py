@@ -4,6 +4,7 @@ from .schema import *
 from .utils import file_url
 from ..elements import *
 from ..schema import AgentMessage, Shared, SystemMessage
+from ..settings import settings
 
 
 @multimethod.multimethod
@@ -38,37 +39,32 @@ def generate_blocks(msg: Message):
 
     thumbnail = file_url(msg.thumbnail)
     name = msg.file_name or msg.title or None
+    url = file_url(msg.file)
     match msg.media_type:
         case 'sticker':
             if msg.file.endswith('.tgs'):
-                yield Image(
-                    url=thumbnail, name=name,
-                )
+                yield Image(url=thumbnail, name=name)
             else:
-                yield Image(
-                    url=file_url(msg.file), name=name,
-                )
+                yield Image(url=url, name=name)
 
         case 'animation':
             if msg.mime_type == 'image/gif':
-                yield Image(
-                    url=file_url(msg.file), name=name,
-                )
+                yield Image(url=url, name=name)
             else:
-                # TODO: autoplay
                 yield Video(
-                    url=file_url(msg.file), thumbnail=thumbnail, name=name,
+                    url=url, thumbnail=thumbnail, name=name,
+                    size=None if url is None else (settings.telegram_root / msg.file).stat().st_size,
                 )
 
         case 'video_file' | 'video_message':
-            # TODO: thumbnail
             yield Video(
-                url=file_url(msg.file), thumbnail=thumbnail, name=name,
+                url=url, thumbnail=thumbnail, name=name,
+                size=None if url is None else (settings.telegram_root / msg.file).stat().st_size,
             )
 
         case 'audio_file' | 'voice_message':
             yield Audio(
-                url=file_url(msg.file), thumbnail=thumbnail, name=name,
+                url=url, thumbnail=thumbnail, name=name,
             )
 
         case _ as mt:
@@ -76,18 +72,18 @@ def generate_blocks(msg: Message):
                 raise ValueError(f'Unknown media type: {mt}')
             if msg.file:
                 yield File(
-                    url=file_url(msg.file), name=name,
+                    url=url, name=name,
                     mimetype=msg.mime_type, thumbnail=thumbnail,
                 )
 
-    if msg.location_information:
-        yield Text(text=f'{msg.location_information.latitude}, {msg.location_information.longitude}')
+    if msg.location_information or msg.place_name or msg.address:
+        yield Location(
+            name=msg.place_name, address=msg.address,
+            latitude=msg.location_information.latitude, longitude=msg.location_information.longitude,
+        )
 
     if msg.contact_information:
         yield Contact(
             name=f'{msg.contact_information.first_name} {msg.contact_information.last_name}',
             phone=msg.contact_information.phone_number,
         )
-
-    if msg.live_location_period_seconds is not None:
-        yield Text(text=str(msg.live_location_period_seconds))
