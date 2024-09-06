@@ -5,7 +5,7 @@ from pathlib import Path
 
 import deli
 
-from backend.src.telegram_api.models.media import File
+from .models.media import File
 
 
 # https://core.telegram.org/tdlib/docs/classtd_1_1td__api_1_1_function.html

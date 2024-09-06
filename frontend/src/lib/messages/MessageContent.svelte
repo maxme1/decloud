@@ -1,10 +1,10 @@
 <script lang="ts">
     import { Tooltip } from "flowbite-svelte";
-    import { timeString, type AgentMessage } from "./timeline";
+    import { timeString, type AgentMessage } from "../timeline";
     import { type ChatInfo } from "$lib";
     import Icon from "@iconify/svelte";
     import Thread from "./Thread.svelte";
-    import Elements from "./elements/Elements.svelte";
+    import Elements from "../elements/Elements.svelte";
     import AgentHeader from "./AgentHeader.svelte";
     import Reactions from "./Reactions.svelte";
 

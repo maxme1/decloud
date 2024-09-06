@@ -1,7 +1,6 @@
 <script lang="ts">
-    import { getAgent, isAgent, isSystem, type Message } from "./timeline";
+    import { isAgent, isSystem, type Message } from "../timeline";
     import { type ChatInfo } from "$lib";
-    import Icon from "@iconify/svelte";
     import AgentHeader from "./AgentHeader.svelte";
 
     export let group: Message[];

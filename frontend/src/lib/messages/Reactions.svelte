@@ -1,8 +1,8 @@
 <script lang="ts">
     import { type ChatInfo } from "$lib";
     import { Badge } from "flowbite-svelte";
-    import EmojiBase from "./EmojiBase.svelte";
-    import type { Reaction } from "./client";
+    import EmojiBase from "../EmojiBase.svelte";
+    import type { Reaction } from "../client";
 
     export let reactions: Reaction[];
     export let info: ChatInfo;

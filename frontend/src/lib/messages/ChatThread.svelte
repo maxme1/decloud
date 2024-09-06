@@ -1,6 +1,6 @@
 <script lang="ts">
     import { ButtonGroup, Button, Tooltip } from "flowbite-svelte";
-    import { groupMessages, timeString, type Message } from "./timeline";
+    import { groupMessages, timeString, type Message } from "../timeline";
     import {
         ChevronLeftOutline,
         ChevronRightOutline,
@@ -9,7 +9,7 @@
     import MessageContentDispatch from "./MessageContentDispatch.svelte";
     import GroupImage from "./GroupImage.svelte";
     import GroupHeader from "./GroupHeader.svelte";
-    import type { AnyMessage } from "./client";
+    import type { AnyMessage } from "../client";
 
     export let messages: AnyMessage[];
     export let info: ChatInfo;

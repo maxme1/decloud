@@ -1,31 +1,11 @@
 <script lang="ts">
-    import {
-        Indicator,
-        Avatar,
-        Badge,
-        ButtonGroup,
-        Button,
-    } from "flowbite-svelte";
-    import { List, Li } from "flowbite-svelte";
-    import { groupMessages, type Message } from "./timeline";
-    import MessagesGroup from "./MessagesGroup.svelte";
-    import ServiceGroup from "./SystemContent.svelte";
-    import CheckboxList from "./CheckboxList.svelte";
-    import {
-        UserSettingsOutline,
-        ChartPieOutline,
-        ChevronLeftOutline,
-        ChevronRightOutline,
-    } from "flowbite-svelte-icons";
-    import PostGraphs from "./PostGraphs.svelte";
-    import CheckBoxBool from "./CheckBoxBool.svelte";
     import ChatThread from "./ChatThread.svelte";
-    import type { AnyMessage, Chat, Element } from "./client";
+    import type { AnyMessage, Chat } from "../client";
     import type { ChatInfo } from "$lib";
-    import { elementWalker } from "./utils";
+    import { elementWalker } from "../utils";
 
     export let messages: AnyMessage[];
-    export let chat: Chat;
+    export let channel: Chat;
     export let info: ChatInfo;
 
     let element_types = new Map<string, number>();
@@ -129,7 +109,7 @@
 
 <div class="flex-1 min-w-0">
     <p class="text-lg font-semibold text-gray-900 dark:text-white">
-        {chat.name}
+        {channel.name}
     </p>
     <div class="flex">
         {#each element_types.entries() as entry}
@@ -145,6 +125,16 @@
                         element_enabled.add(entry[0]);
                     }
                     element_enabled = new Set(element_enabled);
+                }}
+                on:contextmenu|preventDefault={() => {
+                    if (
+                        element_enabled.size == 1 &&
+                        element_enabled.has(entry[0])
+                    ) {
+                        element_enabled = new Set(element_types.keys());
+                    } else {
+                        element_enabled = new Set([entry[0]]);
+                    }
                 }}
             >
                 {entry[0]}: {entry[1]}
@@ -165,6 +155,16 @@
                         event_enabled.add(entry[0]);
                     }
                     event_enabled = new Set(event_enabled);
+                }}
+                on:contextmenu|preventDefault={() => {
+                    if (
+                        event_enabled.size == 1 &&
+                        event_enabled.has(entry[0])
+                    ) {
+                        event_enabled = new Set(event_types.keys());
+                    } else {
+                        event_enabled = new Set([entry[0]]);
+                    }
                 }}
             >
                 {entry[0]}: {entry[1]}

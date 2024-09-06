@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { getAgent } from "./timeline";
+    import { getAgent } from "../timeline";
     import { type ChatInfo } from "$lib";
     import Icon from "@iconify/svelte";
 

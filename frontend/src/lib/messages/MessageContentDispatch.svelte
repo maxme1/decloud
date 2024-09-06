@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { type Message } from "./timeline";
+    import { type Message } from "../timeline";
     import { type ChatInfo } from "$lib";
     import MessageContent from "./MessageContent.svelte";
     import SystemContent from "./SystemContent.svelte";

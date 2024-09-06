@@ -7,8 +7,6 @@
     export let info: ChatInfo;
 </script>
 
-<!-- TODO: deal with overflow -->
-<!-- TODO: language -->
-<pre class="whitespace-pre-line bg-gray-300 rounded p-1.5"><Element
-        element={element.element}
-        {info}></Element></pre>
+<span class="whitespace-pre-line bg-gray-300 rounded p-1.5"
+    ><Element element={element.element} {info}></Element></span
+>

@@ -1,13 +1,13 @@
 <script lang="ts">
-    import type { SystemMessage } from "./timeline";
-    import User from "./elements/User.svelte";
+    import type { SystemMessage } from "../timeline";
+    import User from "../elements/User.svelte";
     import Thread from "./Thread.svelte";
 
     import { type ChatInfo } from "$lib";
     import { Badge } from "flowbite-svelte";
-    import Elements from "./elements/Elements.svelte";
+    import Elements from "../elements/Elements.svelte";
     import Reactions from "./Reactions.svelte";
-    import Call from "./events/Call.svelte";
+    import Call from "../events/Call.svelte";
 
     export let message: SystemMessage;
     export let info: ChatInfo;

@@ -2,7 +2,7 @@
     import { type ChatInfo } from "$lib";
     import ChatThread from "./ChatThread.svelte";
     import Icon from "@iconify/svelte";
-    import type { AnyMessage } from "./client";
+    import type { AnyMessage } from "../client";
 
     export let messages: AnyMessage[];
     export let info: ChatInfo;
