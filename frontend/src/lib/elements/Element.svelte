@@ -1,22 +1,24 @@
 <script lang="ts">
     import type { RichText } from "$lib/client";
     import type { ChatInfo } from "$lib";
-    import RichTextSection from "./RichTextSection.svelte";
     import Text from "./Text.svelte";
     import Emoji from "./Emoji.svelte";
     import User from "./User.svelte";
     import Link from "./Link.svelte";
-    import RichTextList from "./RichTextList.svelte";
-    import RichTextPreformatted from "./RichTextPreformatted.svelte";
-    import RichTextQuote from "./RichTextQuote.svelte";
+    import List from "./List.svelte";
+    import Preformat from "./Preformat.svelte";
     import Channel from "./Channel.svelte";
     import Broadcast from "./Broadcast.svelte";
-    import PlainText from "./PlainText.svelte";
     import UserGroup from "./UserGroup.svelte";
-    import Markdown from "./Markdown.svelte";
     import Image from "./Image.svelte";
     import Quote from "./Quote.svelte";
     import Sequence from "./Sequence.svelte";
+    import Section from "./Section.svelte";
+    import Strike from "./Strike.svelte";
+    import Bold from "./Bold.svelte";
+    import Italic from "./Italic.svelte";
+    import Icon from "./Icon.svelte";
+    import Code from "./Code.svelte";
 
     export let element: RichText["elements"][0];
     export let info: ChatInfo;
@@ -26,18 +28,22 @@
         ["user", User],
         ["link", Link],
         ["text", Text],
-        ["plain_text", PlainText],
         ["channel", Channel],
         ["broadcast", Broadcast],
-        ["rich_text_preformatted", RichTextPreformatted],
-        ["rich_text_section", RichTextSection],
-        ["rich_text_quote", RichTextQuote],
-        ["rich_text_list", RichTextList],
+        ["list", List],
         ["usergroup", UserGroup],
-        ["mrkdwn", Markdown],
         ["image", Image],
-        ["quote", Quote],
+        ["icon", Icon],
+
         ["sequence", Sequence],
+        ["section", Section],
+
+        ["pre", Preformat],
+        ["quote", Quote],
+        ["strike", Strike],
+        ["bold", Bold],
+        ["italic", Italic],
+        ["code", Code],
     ]);
 </script>
 

@@ -5,6 +5,8 @@
 
     import { type ChatInfo } from "$lib";
     import Blocks from "./blocks/Blocks.svelte";
+    import { Badge } from "flowbite-svelte";
+    import EmojiBase from "./EmojiBase.svelte";
 
     export let message: SystemMessage;
     export let info: ChatInfo;
@@ -41,5 +43,20 @@
             </span>
         </div>
     </div>
+
+    <!-- reactions -->
+    <div>
+        {#if message.reactions.length > 0}
+            <div class="flex flex-wrap">
+                {#each message.reactions as reaction}
+                    <Badge color="blue" rounded
+                        ><EmojiBase {info} emoji={reaction.emoji} height={4} />
+                        {reaction.users.length}</Badge
+                    >
+                {/each}
+            </div>
+        {/if}
+    </div>
+
     <Thread messages={message.thread ?? []} {info}></Thread>
 </div>

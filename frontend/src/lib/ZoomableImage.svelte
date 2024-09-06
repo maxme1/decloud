@@ -1,5 +1,6 @@
 <script lang="ts">
     export let src: string;
+    export let alt: string = "";
     let className: string = "";
     export { className as class };
 
@@ -15,10 +16,10 @@
         on:click={toggleZoom}
         class="fixed top-0 left-0 z-10 w-screen h-screen flex justify-center bg-gray-900 bg-opacity-90"
     >
-        <img {src} class="p-2 fit" on:click={toggleZoom} />
+        <img {src} {alt} class="p-2 fit" on:click={toggleZoom} />
     </div>
 {/if}
-<img {src} class={className} on:click={toggleZoom} />
+<img {src} {alt} class={className} on:click={toggleZoom} />
 
 <style>
     .fit {

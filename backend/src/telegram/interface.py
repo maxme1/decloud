@@ -20,7 +20,7 @@ class Telegram(ChatInterface):
     def info(self, x):
         users = deli.load(settings.telegram_root / 'chats.json')
         return ChatInfo(
-            agents=[Agent(id=f'user{x}', name=u, avatar=None) for x, u in users.items()],
+            agents=[Agent(id=f'user{x}', name=u, avatar=None, is_bot=False) for x, u in users.items()],
         )
 
     def resolve(self, file):

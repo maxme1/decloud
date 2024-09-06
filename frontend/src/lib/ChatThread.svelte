@@ -105,7 +105,7 @@
                             <div class="w-full">
                                 <div class="flex justify-start w-full">
                                     <!-- first message -->
-                                    <div class="w-10">
+                                    <div class="w-10 self-start">
                                         <GroupImage {group} {info} />
                                     </div>
                                     <div class="ml-1 px-1 w-full mb-1">

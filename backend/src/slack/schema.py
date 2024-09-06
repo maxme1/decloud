@@ -32,7 +32,7 @@ class AttachmentField(NoExtra):
 
 
 class MessageBlock(BaseModel):
-    class MBlocks(BaseModel):
+    class MBlocks(NoExtra):
         blocks: list[Block]
 
     message: MBlocks
@@ -57,7 +57,7 @@ class Attachment(BaseModel):
     is_app_unfurl: bool | None = None
     is_animated: bool | None = None
 
-    files: list[dict] = Field(default_factory=list)
+    files: list[File] = Field(default_factory=list)
 
     fallback: str | None = None
     fields: list[AttachmentField] = Field(default_factory=list)

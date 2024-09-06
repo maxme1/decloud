@@ -18,7 +18,7 @@
     <img
         src={emoji.url}
         alt={emoji.name ?? ""}
-        class={`inline-block h-${height}`}
+        class={`inline-block h-${height} w-${height}`}
     />
 {:else}
     {console.log("not found emoji", emoji.name, emoji.url)}

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal, Union
 
-from .elements import Element, PlainText
+from .elements import Element
 from .utils import NoExtra
 
 
@@ -32,7 +32,7 @@ class Section(BlockBase):
 
 class Header(BlockBase):
     type: Literal['header'] = 'header'
-    text: PlainText
+    text: Element
 
 
 class Context(BlockBase):

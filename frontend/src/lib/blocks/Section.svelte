@@ -9,5 +9,6 @@
     // TODO: accessory?
 </script>
 
-<br />
-<Elements elements={block.elements} {info}></Elements>
+<div>
+    <Elements elements={block.elements} {info}></Elements>
+</div>

@@ -47,7 +47,7 @@ class Agent(NoExtra):
 
 class SystemMessage(Base):
     type: Literal['system'] = 'system'
-    event: Literal['call', 'join', 'leave'] | str
+    event: Literal['call', 'join', 'leave', 'purpose'] | str
     agents: list[str]
 
 

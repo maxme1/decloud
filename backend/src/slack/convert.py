@@ -4,11 +4,12 @@ import multimethod
 from jboc import collect
 
 from ..blocks import Context, File, RichText, Section, Tombstone
-from ..elements import EmojiBase, ImageElement, Link, PlainText
+from ..elements import EmojiBase, Icon, Image, Link, Text
 from ..schema import AgentMessage, Reaction, Shared, SystemMessage
 from .elements import Mrkdwn, custom_emojis
-from .schema import BotMessage, EventMessage, HuddleThread, ThreadBroadcast, UnknownFile, UserMessage
+from .schema import BotMessage, EventMessage, ThreadBroadcast, UnknownFile, UserMessage
 from .utils import file_url, standard_emojis
+from ..utils import split_into_segments
 
 
 @multimethod.multimethod
@@ -53,23 +54,30 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
                 dump.pop('is_msg_unfurl')
                 dump.pop('channel_id')
                 dump.pop('author_id')
+                dump.pop('text', None)
+                dump.pop('files', None)
+                dump['message_blocks'][0].pop('message')
 
-                shared.append(Shared(message=AgentMessage(
-                    blocks=[x.convert() for x in attachment.message_blocks[0].message.blocks],
-                    id=attachment.ts, reactions=[], agent_id=attachment.author_id, shared=[], reply_to=[],
-                    timestamp=attachment.ts, thread=[],
-                ), channel_id=attachment.channel_id))
+                shared.append(Shared(
+                    message=AgentMessage(
+                        blocks=[x.convert() for x in attachment.message_blocks[0].message.blocks] + list(
+                            convert_files(attachment.files)),
+                        id=attachment.ts, reactions=[], agent_id=attachment.author_id, shared=[], reply_to=[],
+                        timestamp=attachment.ts, thread=[],
+                    ),
+                    channel_id=attachment.channel_id
+                ))
 
                 continue
 
             if attachment.author_name or attachment.author_icon:
                 elts = []
                 if attachment.author_icon:
-                    elts.append(ImageElement(url=attachment.author_icon))
+                    elts.append(Icon(url=attachment.author_icon))
                 if attachment.author_name:
                     elts.append(
                         Link(text=attachment.author_name, url=attachment.author_link) if attachment.author_link else
-                        PlainText(text=attachment.author_name, emoji=False)
+                        Text(text=attachment.author_name)
                     )
 
                 dump.pop('author_icon', None)
@@ -83,7 +91,7 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
                 dump.pop('pretext')
 
                 blocks.append(Section(elements=[
-                    PlainText(text=attachment.pretext, emoji=False) if 'pretext' not in markdown else
+                    Text(text=attachment.pretext) if 'pretext' not in markdown else
                     no_mrkdwn(attachment.pretext)
                 ]))
 
@@ -91,7 +99,7 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
                 dump.pop('text')
 
                 blocks.append(Section(elements=[
-                    PlainText(text=attachment.text, emoji=False) if 'text' not in markdown else
+                    Text(text=attachment.text) if 'text' not in markdown else
                     no_mrkdwn(attachment.text)
                 ]))
 
@@ -100,31 +108,35 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
                 dump.pop('title_link', None)
 
                 blocks.append(Section(elements=[
-                    PlainText(text=attachment.title, emoji=False) if not attachment.title_link else
+                    Text(text=attachment.title) if not attachment.title_link else
                     Link(url=attachment.title_link, text=attachment.title)
                 ]))
 
             dump.pop('fields', None)
             for field in attachment.fields:
+                elts = []
                 if field.title:
-                    blocks.append(Section(elements=[no_mrkdwn(field.title)]))
+                    elts.append(no_mrkdwn(field.title))
                 if field.value:
-                    blocks.append(Section(elements=[no_mrkdwn(field.value)]))
+                    elts.append(no_mrkdwn(field.value))
                 # TODO: short
+                if len(elts) == 2:
+                    elts.insert(1, Text(text=' '))
+                blocks.append(Section(elements=elts))
 
             if attachment.footer:
                 dump.pop('footer')
 
                 blocks.append(Context(elements=[
-                    PlainText(text=attachment.footer, emoji=False)
+                    Text(text=attachment.footer)
                 ]))
 
         blocks.extend(
-            Section(elements=[PlainText(text=f'\nATTACHMENT: !!!! {x}', emoji=False)]) for x in att_blocks if x
+            Section(elements=[Text(text=f'\nATTACHMENT: !!!! {x}')]) for x in att_blocks if x
         )
 
     # files
-    blocks.extend(map(convert_file, getattr(msg, 'files', [])))
+    blocks.extend(convert_files(getattr(msg, 'files', [])))
 
     return AgentMessage(
         blocks=blocks, id=msg.ts, agent_id=msg.user or msg.bot_id, timestamp=msg.ts,
@@ -142,12 +154,16 @@ def convert(msg: EventMessage):
         huddle_thread='call',
         channel_join='join',
         channel_leave='leave',
-    )
+        channel_purpose='purpose',
+    ) | dict.fromkeys(('reminder_add',), 'custom')
+
     blocks = []
     if msg.subtype == 'reminder_add':
-        blocks.append(RichText(elements=[PlainText(text=msg.text, emoji=False)]))
+        blocks.append(RichText(elements=[Text(text=msg.text)]))
+    if msg.subtype == 'channel_purpose':
+        blocks.append(RichText(elements=[Text(text=msg.purpose)]))
 
-    if msg.subtype not in events and msg.subtype not in ('reminder_add',):
+    if msg.subtype not in events and msg.subtype not in ['channel_canvas_updated']:
         print('missing subtype', msg.subtype)
 
     return SystemMessage(
@@ -178,11 +194,20 @@ def get_reactions(msg):
         )
 
 
-def convert_file(file):
-    if isinstance(file, UnknownFile):
-        return File(url=file_url(file.id), name=None)
+def convert_files(files):
+    for is_image, group in split_into_segments(
+            files, lambda x: hasattr(x, 'mimetype') and x.mimetype.startswith('image/')
+    ):
+        if is_image:
+            yield RichText(elements=[Image(url=file_url(file.id), name=file.name) for file in group])
 
-    if file.mode == 'tombstone':
-        return Tombstone()
+        else:
+            for file in group:
+                if isinstance(file, UnknownFile):
+                    yield File(url=file_url(file.id), name=None)
 
-    return File(url=file_url(file.id), name=file.name, mimetype=file.mimetype)
+                elif file.mode == 'tombstone':
+                    yield Tombstone()
+
+                else:
+                    yield File(url=file_url(file.id), name=file.name, mimetype=file.mimetype)

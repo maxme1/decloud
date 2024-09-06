@@ -1,6 +1,12 @@
 import re
 
-from ..elements import Broadcast, Channel, Link, PlainText, User
+import marko
+import multimethod
+from marko.block import BlankLine, Paragraph, Document
+from marko.ext.gfm.elements import Strikethrough
+from marko.inline import Emphasis, LineBreak, RawText, StrongEmphasis
+
+from ..elements import Bold, Broadcast, Channel, Italic, Link, Strike, Text, User
 
 
 # rules: https://api.slack.com/reference/surfaces/formatting#retrieving-messages
@@ -8,12 +14,14 @@ pattern = re.compile(r'<([^>]*)>')
 
 
 def parse(text: str):
+    # TODO: convert stuff like `&amp;` to `&`
     start = 0
     for match in pattern.finditer(text):
         prefix = text[start:match.start()]
-        if prefix:
-            yield PlainText(text=prefix, emoji=False)
         start = match.end()
+
+        if prefix:
+            yield from convert_markdown(prefix)
 
         kind, *context = match.group(1).split('|', 1)
         kind = kind.strip()
@@ -35,4 +43,57 @@ def parse(text: str):
             yield Link(url=kind, text=context)
 
     if start < len(text):
-        yield PlainText(text=text[start:], emoji=False)
+        yield from convert_markdown(text[start:])
+
+
+def convert_markdown(text: str):
+    return list(_unpack(marko.Markdown().parse(text)))
+
+
+@multimethod.multimethod
+def _unpack(x):
+    raise TypeError(x)
+
+
+@_unpack.register
+def _unpack(x: Document | Paragraph):
+    for child in x.children:
+        yield from _unpack(child)
+
+
+@_unpack.register
+def _unpack(x: RawText):
+    yield Text(text=x.children)
+
+
+@_unpack.register
+def _unpack(x: StrongEmphasis):
+    assert len(x.children) == 1
+    child, = _unpack(x.children[0])
+    yield Bold(element=child)
+
+
+@_unpack.register
+def _unpack(x: Emphasis):
+    assert len(x.children) == 1
+    child, = _unpack(x.children[0])
+    yield Italic(element=child)
+
+
+@_unpack.register
+def _unpack(x: Strikethrough):
+    assert len(x.children) == 1
+    child, = _unpack(x.children[0])
+    yield Strike(element=child)
+
+
+@_unpack.register
+def _unpack(x: LineBreak):
+    assert x.children == '\n'
+    yield Text(text='\n')
+
+
+@_unpack.register
+def _unpack(x: BlankLine):
+    assert x.children == []
+    yield Text(text='\n')

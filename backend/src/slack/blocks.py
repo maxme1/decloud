@@ -6,7 +6,7 @@ from pydantic import Field, model_validator
 
 from .. import blocks, elements
 from ..utils import NoExtra
-from .elements import Element, PlainText
+from .elements import Element, PlainText, convert_elements
 from .utils import file_url
 
 
@@ -16,7 +16,7 @@ class BlockBase(NoExtra):
     def convert(self):
         dump = self.model_dump(exclude={'block_id'})
         if 'elements' in dump:
-            dump['elements'] = [x.convert() for x in self.elements]
+            dump['elements'] = convert_elements(self.elements)
         return dump
 
 
@@ -25,7 +25,7 @@ class RichText(BlockBase):
     elements: list[Element]
 
     def convert(self):
-        return blocks.RichText(elements=[x.convert() for x in self.elements])
+        return blocks.RichText(elements=convert_elements(self.elements))
 
 
 # TODO
@@ -51,7 +51,7 @@ class Section(BlockBase):
 
     def convert(self):
         return blocks.Section(
-            elements=[x.convert() for x in self.fields] if self.fields else [self.text.convert()],
+            elements=convert_elements(self.fields) if self.fields else [self.text.convert()],
             accessory=self.accessory,
         )
 
@@ -59,6 +59,9 @@ class Section(BlockBase):
 class Header(BlockBase):
     type: Literal['header']
     text: PlainText
+
+    def convert(self):
+        return blocks.Header(text=self.text.convert())
 
 
 class Context(BlockBase):
@@ -82,7 +85,7 @@ class Image(BlockBase):
     rotation: int = 0
 
     def convert(self):
-        return blocks.RichText(elements=[elements.ImageElement(url=file_url(self.image_url))])
+        return blocks.RichText(elements=[elements.Image(url=file_url(self.image_url))])
 
 
 class Actions(BlockBase):

@@ -45,18 +45,16 @@
     </div> -->
 
     <!-- reactions -->
-    <div>
-        {#if message.reactions.length > 0}
-            <div class="flex">
-                {#each message.reactions as reaction}
-                    <Badge color="blue" rounded
-                        ><EmojiBase {info} emoji={reaction.emoji} height={4} />
-                        {reaction.users.length}</Badge
-                    >
-                {/each}
-            </div>
-        {/if}
-    </div>
+    {#if message.reactions.length > 0}
+        <div class="flex flex-wrap">
+            {#each message.reactions as reaction}
+                <Badge color="blue" rounded
+                    ><EmojiBase {info} emoji={reaction.emoji} height={4} />
+                    {reaction.users.length}</Badge
+                >
+            {/each}
+        </div>
+    {/if}
 
     <!-- shared -->
     {#if message.shared.length > 0}

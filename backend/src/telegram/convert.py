@@ -47,8 +47,7 @@ def convert_element(entity):
 
 @convert_element.register
 def convert_element(entity: Pre):
-    # TODO: language
-    return RichTextElement(type='rich_text_preformatted', elements=[PlainText(text=entity.text, emoji=False)])
+    return Preformat(element=Text(text=entity.text), language=entity.language)
 
 
 @convert_element.register
@@ -64,14 +63,14 @@ def convert_element(entity: MentionName):
 
 @convert_element.register
 def convert_element(entity: CustomEmoji):
-    # TODO: emoji should have a link
-    return Emoji(name=entity.text)
+    assert not entity.text, entity.text
+    return Emoji(name=entity.text, url=file_url(entity.document_id))
 
 
 @convert_element.register
 def convert_element(entity: BlockQuote):
     # TODO: collapsed
-    return RichTextElement(type='rich_text_quote', elements=[PlainText(text=entity.text, emoji=False)])
+    return Quote(element=Text(text=entity.text))
 
 
 @convert_element.register
@@ -85,12 +84,12 @@ def convert_element(entity: PlainLike):
         case 'mention':
             return User(user_id=text)
 
-    return PlainText(text=text, emoji=False)
+    return Text(text=text)
 
 
 def generate_blocks(msg: Message):
     def image(**kwargs):
-        return RichText(elements=[ImageElement(**kwargs)])
+        return RichText(elements=[Image(**kwargs)])
 
     if msg.photo:
         yield image(
@@ -138,20 +137,18 @@ def generate_blocks(msg: Message):
 
     if msg.location_information:
         yield RichText(type='rich_text', elements=[
-            PlainText(text=f'{msg.location_information.latitude}, {msg.location_information.longitude}', emoji=False,
-                      type='plain_text')
+            Text(text=f'{msg.location_information.latitude}, {msg.location_information.longitude}')
         ])
 
     if msg.contact_information:
         yield RichText(type='rich_text', elements=[
-            PlainText(
+            Text(
                 text=f'{msg.contact_information.phone_number}, {msg.contact_information.first_name}, '
-                     f'{msg.contact_information.last_name}',
-                emoji=False,
-                type='plain_text')
+                     f'{msg.contact_information.last_name}'
+            )
         ])
 
     if msg.live_location_period_seconds is not None:
         yield RichText(type='rich_text', elements=[
-            PlainText(text=str(msg.live_location_period_seconds), emoji=False, type='plain_text')
+            Text(text=str(msg.live_location_period_seconds))
         ])

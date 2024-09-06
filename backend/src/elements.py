@@ -5,62 +5,72 @@ from typing import Literal, Union
 from .utils import NoExtra
 
 
-StyleStr = Literal['ordered', 'bullet', 'primary']
-Style = dict
-
-
 class ElementBase(NoExtra):
-    style: Style | None = None
+    pass
 
+
+# styles
 
 class Quote(ElementBase):
     type: Literal['quote'] = 'quote'
     element: Element
 
 
+class Bold(ElementBase):
+    type: Literal['bold'] = 'bold'
+    element: Element
+
+
+class Italic(ElementBase):
+    type: Literal['italic'] = 'italic'
+    element: Element
+
+
+class Strike(ElementBase):
+    type: Literal['strike'] = 'strike'
+    element: Element
+
+
+class Preformat(ElementBase):
+    type: Literal['pre'] = 'pre'
+    element: Element
+    language: str | None
+
+
+class Code(ElementBase):
+    type: Literal['code'] = 'code'
+    element: Element
+
+
+# containers
+
 class Sequence(ElementBase):
     type: Literal['sequence'] = 'sequence'
     elements: list[Element]
 
 
-class RichTextElement(ElementBase):
-    type: Literal['rich_text_section', 'rich_text_preformatted', 'rich_text_quote']
+class Section(ElementBase):
+    type: Literal['section'] = 'section'
+    element: Element
+
+
+class List(ElementBase):
+    type: Literal['list'] = 'list'
     elements: list[Element]
-    indent: int | None = None
-    border: int | None = None
-    offset: int | None = None
+    style: Literal['ordered', 'unordered']
 
 
-class RichTextList(ElementBase):
-    type: Literal['rich_text_list'] = 'rich_text_list'
-    elements: list[Element]
-    indent: int | None = None
-    border: int | None = None
-    offset: int | None = None
-    style: StyleStr
-
+# primitives
 
 class Text(ElementBase):
     type: Literal['text'] = 'text'
     text: str
 
 
-class PlainText(ElementBase):
-    type: Literal['plain_text'] = 'plain_text'
-    text: str
-    emoji: bool
-
-
 class Channel(ElementBase):
     type: Literal['channel'] = 'channel'
     channel_id: str
     text: str | None = None
-
-
-class Markdown(ElementBase):
-    type: Literal['mrkdwn'] = 'mrkdwn'
-    text: str
-    verbatim: bool
 
 
 class EmojiBase(NoExtra):
@@ -105,17 +115,24 @@ class UserGroup(ElementBase):
 
 class Button(ElementBase):
     type: Literal['button'] = 'button'
-    text: PlainText
+    text: Text
     value: str | None = None
     action_id: str
     # url: str | None = None
-    style: StyleStr | None = None
+    style: Literal['ordered', 'bullet', 'primary'] | None = None
     # confirm: dict | None = None
 
 
-class ImageElement(ElementBase):
+class Image(ElementBase):
     type: Literal['image'] = 'image'
     url: str | None = None
+    name: str | None = None
+
+
+class Icon(ElementBase):
+    type: Literal['icon'] = 'icon'
+    url: str | None = None
+    name: str | None = None
 
 
 type Element = Union[*ElementBase.__subclasses__()]
