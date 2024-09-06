@@ -1,14 +1,15 @@
-import type { Message, PhoneCall, EditChatTheme, InviteMembers, EditGroupPhoto, MigrateFromGroup, MigrateToSupergroup } from "./schema";
+import type { PhoneCall, EditChatTheme, InviteMembers, EditGroupPhoto, MigrateFromGroup, MigrateToSupergroup } from "./schema";
 
 export type Service = PhoneCall | EditChatTheme | EditGroupPhoto | InviteMembers | MigrateFromGroup | MigrateToSupergroup;
-export type AnyMessage = Message | Service;
+// export type Message = Message | Service;
 
-function newGroup(present: AnyMessage, message: AnyMessage): boolean {
+function newGroup(present: Message, message: Message): boolean {
     if (present.type !== message.type) {
         return true;
     }
-    if (present.type === 'service') {
-        message = message as Service;
+    if (present.type === 'system') {
+        return false;
+        message = message as SystemMessage;
         if (present.actor_id !== message.actor_id) {
             return true;
         }
@@ -16,17 +17,20 @@ function newGroup(present: AnyMessage, message: AnyMessage): boolean {
             return true;
         }
     } else {
-        message = message as Message;
-        if (present.from_id !== message.from_id) {
+        message = message as AgentMessage;
+        if (present.agent_id === null || message.agent_id === null) {
+            return true;
+        }
+        if (present.agent_id !== message.agent_id) {
             return true;
         }
     }
     return false;
 }
 
-export function groupMessages(messages: AnyMessage[]): AnyMessage[][] {
-    let result: AnyMessage[][] = [];
-    let current: AnyMessage[] = [];
+export function groupMessages(messages: Message[]): Message[][] {
+    let result: Message[][] = [];
+    let current: Message[] = [];
     for (const message of messages) {
         if (current.length === 0) {
             current.push(message);
@@ -45,4 +49,8 @@ export function groupMessages(messages: AnyMessage[]): AnyMessage[][] {
     return result
 }
 
-export { type Message };
+import type { AgentMessage, SystemMessage } from "./client";
+
+type Message = AgentMessage | SystemMessage;
+
+export { type AgentMessage, type Message, type SystemMessage };
