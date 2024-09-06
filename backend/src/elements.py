@@ -14,9 +14,9 @@ class ElementBase(NoExtra):
 # TODO
 class CallElement(ElementBase, extra='ignore'):
     type: Literal['call'] = 'call'
-    call_id: str
-    api_decoration_available: bool
-    call: dict
+    # call_id: str
+    # api_decoration_available: bool
+    # call: dict
 
 
 class Header(ElementBase):
@@ -72,10 +72,15 @@ class Strike(ElementBase):
     position: Literal['under', 'over', 'through']
 
 
+class Code(ElementBase):
+    type: Literal['code'] = 'code'
+    element: Element
+    language: str | None
+
+
 class Preformat(ElementBase):
     type: Literal['pre'] = 'pre'
     element: Element
-    language: str | None
 
 
 # containers
@@ -123,10 +128,7 @@ class Emoji(ElementBase, EmojiBase):
 class Link(ElementBase):
     type: Literal['link'] = 'link'
     url: str
-    # FIXME
-    text: Element | None = None
-
-    unsafe: bool | None = None
+    element: Element | None
 
 
 class Color(ElementBase):
@@ -139,7 +141,7 @@ class Color(ElementBase):
 class Channel(ElementBase):
     type: Literal['channel'] = 'channel'
     channel_id: str
-    text: str | None = None
+    text: str | None
 
 
 class Broadcast(ElementBase):
@@ -150,7 +152,7 @@ class Broadcast(ElementBase):
 class User(ElementBase):
     type: Literal['user'] = 'user'
     user_id: str
-    text: str | None = None
+    element: Element | None
 
 
 class UserGroup(ElementBase):
@@ -178,19 +180,19 @@ class Location(ElementBase):
 
 class Image(ElementBase):
     type: Literal['image'] = 'image'
-    url: str | None = None
-    name: str | None = None
+    url: str | None
+    name: str | None
 
 
 class Icon(ElementBase):
     type: Literal['icon'] = 'icon'
-    url: str | None = None
-    name: str | None = None
+    url: str | None
+    name: str | None
 
 
 class Sticker(ElementBase):
     type: Literal['sticker'] = 'sticker'
-    url: str | None = None
+    url: str | None
 
 
 class Video(ElementBase):

@@ -35,7 +35,7 @@ class PlainLike(NoExtra):
             case 'underline':
                 return elements.Strike(element=wrapped, position='under')
             case 'code':
-                return elements.Preformat(element=wrapped, language=None)
+                return elements.Code(element=wrapped, language=None)
 
         return wrapped
 
@@ -54,7 +54,7 @@ class Pre(PlainLike):
     language: str
 
     def convert(self):
-        return elements.Preformat(element=elements.Text(text=self.text), language=self.language)
+        return elements.Code(element=elements.Text(text=self.text), language=self.language)
 
 
 class TextLink(PlainLike):
@@ -62,7 +62,7 @@ class TextLink(PlainLike):
     href: str
 
     def convert(self):
-        return elements.Link(url=self.href, text=elements.Text(text=self.text))
+        return elements.Link(url=self.href, element=elements.Text(text=self.text))
 
 
 class MentionName(PlainLike):
@@ -70,7 +70,7 @@ class MentionName(PlainLike):
     user_id: int
 
     def convert(self):
-        return elements.User(user_id=str(self.user_id), text=self.text)
+        return elements.User(user_id=str(self.user_id), element=self.text)
 
 
 class CustomEmoji(PlainLike):
@@ -78,9 +78,7 @@ class CustomEmoji(PlainLike):
     document_id: StoredFile
 
     def convert(self):
-        return elements.Emoji(
-            name=None, url=file_url(self.document_id), skin_tone=None, unicode=self.text.encode().hex()
-        )
+        return elements.Emoji(name=None, url=file_url(self.document_id), skin_tone=None, unicode=self.text)
 
 
 type TextEntity = Union[PlainLike, *PlainLike.__subclasses__()]

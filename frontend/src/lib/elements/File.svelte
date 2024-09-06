@@ -13,12 +13,20 @@
     class="flex items-center text-blue-500 cursor-pointer"
 >
     {#if element.url}
-        <Icon icon="tabler:file" width="3em" height="3em" />
+        {#if element.thumbnail}
+            <img
+                src={element.thumbnail}
+                alt={element.name ?? ""}
+                class="w-12"
+            />
+        {:else}
+            <Icon icon="tabler:file" width="3em" height="3em" />
+        {/if}
     {:else}
         <Icon icon="tabler:file-x" width="3em" height="3em" />
     {/if}
     {#if element.name}
-        <span>
+        <span class="ml-1">
             {element.name}
         </span>
     {/if}

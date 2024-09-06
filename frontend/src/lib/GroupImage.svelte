@@ -12,6 +12,7 @@
         ["join", "tabler:door-enter"],
         ["leave", "tabler:door-exit"],
         ["purpose", "tabler:target"],
+        ["create", "tabler:playlist-add"],
         ["archive", "tabler:archive"],
     ]);
 </script>

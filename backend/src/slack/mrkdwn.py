@@ -33,7 +33,7 @@ def unpack_mrkdwn(text: str):
         if kind.startswith('#C'):
             yield elements.Channel(channel_id=kind.removeprefix('#'), text=context)
         elif kind.startswith('@U') or kind.startswith('@W'):
-            yield elements.User(user_id=kind.removeprefix('@'), text=context)
+            yield elements.User(user_id=kind.removeprefix('@'), element=context)
         elif kind.startswith('!'):
             kind = kind.removeprefix('!')
             if kind in ('channel', 'here', 'everyone'):
@@ -50,7 +50,7 @@ def unpack_mrkdwn(text: str):
         else:
             if context is not None:
                 context = elements.Text(text=context)
-            yield elements.Link(url=kind, text=context)
+            yield elements.Link(url=kind, element=context)
 
     if start < len(text):
         yield elements.Text(text=text[start:])
@@ -118,7 +118,7 @@ def _unpack(x: AutoLink):
     if text is not None:
         text = elements.Text(text=text)
 
-    yield elements.Link(url=link, text=text)
+    yield elements.Link(url=link, element=text)
 
 
 @_unpack.register
@@ -128,7 +128,7 @@ def _unpack(x: CodeSpan):
 
 @_unpack.register
 def _unpack(x: FencedCode):
-    yield elements.Preformat(element=_unpack_many(x.children), language=x.lang or None)
+    yield elements.Code(element=_unpack_many(x.children), language=x.lang or None)
 
 
 @_unpack.register
@@ -145,7 +145,7 @@ def _unpack(x: HTMLBlock):
 
 @_unpack.register
 def _unpack(x: Link):
-    yield elements.Link(url=x.dest, text=_unpack_many(x.children))
+    yield elements.Link(url=x.dest, element=_unpack_many(x.children))
 
 
 @_unpack.register

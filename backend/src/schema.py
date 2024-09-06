@@ -44,9 +44,12 @@ class Agent(NoExtra):
     is_bot: bool
 
 
+SystemEventType = Literal['join', 'leave', 'purpose', 'create', 'archive'] | str
+
+
 class BaseSystemMessage(Base):
     type: Literal['system'] = 'system'
-    event: Literal['join', 'leave', 'purpose', 'archive'] | str
+    event: SystemEventType
     agents: list[str]
 
 

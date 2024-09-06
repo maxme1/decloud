@@ -9,10 +9,11 @@
 <!-- TODO: skin tone -->
 {#if emoji.unicode}
     <span style={`font-size: ${height / 6}rem;`}>
-        {String.fromCodePoint(
+        {emoji.unicode}
+        <!-- {String.fromCodePoint(
             parseInt(emoji.unicode, 16),
             // parseInt(emoji.skin_tone || 0, 16),
-        )}
+        )} -->
     </span>
 {:else if emoji.url}
     <img

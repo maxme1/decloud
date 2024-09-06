@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     slack_root: Path
     telegram_root: Path
+    telegram_api_root: Path
     base_url: str
 
 

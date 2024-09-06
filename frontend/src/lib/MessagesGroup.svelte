@@ -59,7 +59,7 @@
             <div class="">
                 <small class="time-child">{timeString(message.timestamp)}</small
                 >
-                <Tooltip>{group[0].timestamp}</Tooltip>
+                <Tooltip>{message.timestamp}</Tooltip>
             </div>
             <div class="ml-1 px-1 w-full">
                 <div class="hover:bg-gray-100 flex w-full rounded">

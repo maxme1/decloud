@@ -90,7 +90,7 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
                     elts.append(Icon(url=attachment.author_icon))
                 if attachment.author_name:
                     elts.append(
-                        Link(text=Text(text=attachment.author_name), url=attachment.author_link)
+                        Link(element=Text(text=attachment.author_name), url=attachment.author_link)
                         if attachment.author_link else Text(text=attachment.author_name)
                     )
 
@@ -110,7 +110,7 @@ def convert(msg: UserMessage | BotMessage | ThreadBroadcast):
                 title = no_mrkdwn(attachment.title, True)
 
                 elements.append(Section(
-                    element=title if not attachment.title_link else Link(url=attachment.title_link, text=title)
+                    element=title if not attachment.title_link else Link(url=attachment.title_link, element=title)
                 ))
 
             if attachment.text:

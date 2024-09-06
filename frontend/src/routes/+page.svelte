@@ -1,6 +1,7 @@
 <script lang="ts">
     import { type ChatInfo } from "$lib";
     import ChatThread from "$lib/ChatThread.svelte";
+    import ChatTimeline from "$lib/ChatTimeline.svelte";
     import { DefaultService, OpenAPI, type Chat } from "$lib/client";
     import type { Message } from "$lib/timeline";
     import { onMount } from "svelte";
@@ -69,7 +70,7 @@
     //     return Array.from(types).toSorted();
     // }
 
-    function cliptLongName(name: string): string {
+    function clipLongName(name: string): string {
         const size = 16;
         return name.length > size ? name.slice(0, size) + "..." : name;
     }
@@ -92,7 +93,7 @@
                         class={"text-gray-500 dark:text-gray-400 px-2 hover:bg-gray-200 rounded-md p-1 w-full text-left text-nowrap overflow-clip text-clip " +
                             (activeChat === chat ? "bg-gray-300" : "")}
                     >
-                        <small>{cliptLongName(chat.name)}</small>
+                        <small>{clipLongName(chat.name)}</small>
                     </button>
                 </li>
             {/each}
@@ -101,13 +102,7 @@
 
     {#if activeChat !== null}
         <div class="p-2 mx-1 w-full flex flex-col overflow-x-hidden">
-            <div class="flex-1 min-w-0">
-                <p class="text-lg font-semibold text-gray-900 dark:text-white">
-                    {activeChat.name}
-                </p>
-            </div>
-
-            <ChatThread {messages} {info} />
+            <ChatTimeline chat={activeChat} {messages} {info} />
         </div>
     {/if}
 </div>

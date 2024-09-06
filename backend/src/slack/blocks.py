@@ -46,7 +46,7 @@ class Section(BlockBase):
 
     @model_validator(mode='after')
     def _mutex(cls, v):
-        assert bool(v.text) != bool(v.fields), (v.text, v.fields)
+        assert bool(v.element) != bool(v.fields), (v.element, v.fields)
         return v
 
     def convert(self):

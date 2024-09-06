@@ -66,7 +66,7 @@ class ElementBase(NoExtra):
 def _apply_style(x, style):
     style = (style or {}).copy()
     if style.pop('code', None):
-        x = elements.Preformat(element=x, language=None)
+        x = elements.Code(element=x, language=None)
     if style.pop('bold', None):
         x = elements.Bold(element=x)
     if style.pop('strike', None):
@@ -96,7 +96,7 @@ class RichTextElement(ElementBase):
 
         if self.type == 'rich_text_preformatted':
             assert not self.indent and not self.offset, (self.indent, self.offset)
-            return elements.Preformat(element=sequence, language=None)
+            return elements.Code(element=sequence, language=None)
 
         assert self.type == 'rich_text_section', self.type
         assert not self.border, self.border
@@ -183,7 +183,7 @@ class Link(ElementBase):
         text = self.text
         if text is not None:
             text = elements.Text(text=text)
-        return _apply_style(elements.Link(url=self.url, text=text), self.style)
+        return _apply_style(elements.Link(url=self.url, element=text), self.style)
 
 
 class Image(ElementBase):

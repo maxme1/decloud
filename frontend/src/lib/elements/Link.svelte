@@ -8,8 +8,8 @@
 </script>
 
 <a href={element.url} class="text-blue-500"
-    >{#if element.text}<Element
-            element={element.text}
+    >{#if element.element}<Element
+            element={element.element}
             {info}
         />{:else}{element.url}{/if}</a
 >

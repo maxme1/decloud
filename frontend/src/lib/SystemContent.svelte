@@ -12,7 +12,7 @@
     export let message: SystemMessage;
     export let info: ChatInfo;
 
-    const users = new Set(["join", "leave", "archive"]);
+    const users = new Set(["join", "leave", "archive", "create"]);
     const components = new Map([["call", Call]]);
 </script>
 
@@ -34,7 +34,11 @@
                     <div>
                         {#each message.agents as agent}
                             <User
-                                element={{ user_id: agent, type: "user" }}
+                                element={{
+                                    user_id: agent,
+                                    type: "user",
+                                    element: null,
+                                }}
                                 {info}
                             />
                         {/each}
@@ -43,7 +47,11 @@
                     {message.event}
                     {#each message.agents as agent}
                         <User
-                            element={{ user_id: agent, type: "user" }}
+                            element={{
+                                user_id: agent,
+                                type: "user",
+                                element: null,
+                            }}
                             {info}
                         />
                     {/each}

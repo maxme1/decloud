@@ -15,17 +15,17 @@
         muted
         loop
         autoplay
-        class="max-h-36 rounded"
+        class="max-w-36 rounded"
         on:click={() => {
             play = false;
         }}
     />
 {:else if element.thumbnail}
-    <div class="relative">
+    <div class="relative max-w-36">
         <img
             src={element.thumbnail}
             alt={element.name ?? "video"}
-            class="max-h-36 rounded"
+            class="rounded"
         />
         <!-- overlay a play button -->
         {#if element.url}
