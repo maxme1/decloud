@@ -12,3 +12,4 @@ more-itertools
 
 typer
 rich
+tqdm
