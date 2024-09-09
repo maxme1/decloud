@@ -28,6 +28,7 @@ jobs:
         run: |
           cd frontend
           npm i --force
+          npm run generate-client
           npm run deploy
           mv build/*/* /tmp/demo/
           cd ..
