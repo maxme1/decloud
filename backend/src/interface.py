@@ -44,6 +44,9 @@ class ChatInterface:
 
         fid = self.get_file_id(x)
         if fid is not None:
+            if settings.base_url is None:
+                raise ValueError('`base_url` is not set in your config')
+
             return f'{settings.base_url}/files/{self.name}/{fid}'
 
     def get_file_id(self, x) -> str | None:
