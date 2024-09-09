@@ -8,3 +8,4 @@ marko
 deli
 multimethod
 more-itertools
+rich
