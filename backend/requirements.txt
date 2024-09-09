@@ -6,6 +6,7 @@ pydantic_settings
 marko
 
 deli
+jboc
 multimethod
 more-itertools
 
