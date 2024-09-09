@@ -26,10 +26,18 @@ class Slack(ChatInterface):
         return convert(msg, self)
 
     def gather_chats(self):
-        return [
-            ChatDescription(id=x['id'], name=x['name'])
-            for x in sorted(deli.load(self.root / 'conversations.json'), key=lambda x: -x['updated'])
-        ]
+        result = []
+        for x in sorted(deli.load(self.root / 'conversations.json'), key=lambda x: -x['updated']):
+            if not (self.root / 'messages' / f"{x['id']}.json").exists():
+                continue
+
+            if x.get('is_mpim'):
+                name = x['purpose']['value']
+            else:
+                name = x.get('name') or x.get('user')
+            result.append(ChatDescription(id=x['id'], name=name))
+
+        return result
 
     @collect
     def gather_agents(self):

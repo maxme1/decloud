@@ -9,6 +9,7 @@
     import Reactions from "./Reactions.svelte";
     import type { Shared } from "$lib/client";
     import { activeChannel } from "$lib/store";
+    import { base } from "$app/paths";
 
     export let message: AgentMessage;
     export let info: ChatInfo;
@@ -125,7 +126,7 @@
                                             {#if shared.channel_id && shared.message_id && shared.source}
                                                 <a
                                                     class="flex flex-row items-start hover:bg-gray-200 rounded-md p-1"
-                                                    href={`/channels/${shared.source}/${shared.channel_id}#${shared.message_id}`}
+                                                    href="{base}/channels/{shared.source}/{shared.channel_id}#{shared.message_id}"
                                                 >
                                                     <Icon
                                                         icon="fluent:calendar-reply-16-filled"

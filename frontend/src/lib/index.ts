@@ -1,6 +1,7 @@
-import { type Agent, type Chat, type ChatInfo as _ChatInfo, DefaultService as ApiService, OpenAPI } from "./client";
+import { type Chat, type ChatInfo as _ChatInfo, DefaultService as ApiService, OpenAPI } from "./client";
 
-OpenAPI.BASE = "http://localhost:9000";
+OpenAPI.BASE = import.meta.env.VITE_API_ROOT || "http://localhost:9000";
+
 
 interface ChatInfo extends _ChatInfo {
     channels: Array<Chat>;

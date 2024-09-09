@@ -44,6 +44,15 @@
         event_enabled = new Set(event_types.keys());
     }
 
+    function anyType(element: any) {
+        for (const x of elementWalker(element)) {
+            if (element_enabled.has(x.type)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     //         if (message.type == "message") {
     //             if (!currentMedia.has(message.media_type ?? "none")) {
     //                 return false;
@@ -106,14 +115,10 @@
         if (message.type == "agent") {
             return (
                 element_types.size == 0 ||
-                message.elements.some((element) => {
-                    for (const x of elementWalker(element)) {
-                        if (element_enabled.has(x.type)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                })
+                (element_types.size == element_enabled.size &&
+                    message.elements.length == 0) ||
+                message.elements.some(anyType) ||
+                message.shared.some((shared) => shared.elements.some(anyType))
             );
         } else {
             return event_types.size == 0 || event_enabled.has(message.event);

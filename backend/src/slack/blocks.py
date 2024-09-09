@@ -29,10 +29,19 @@ class RichText(BlockBase):
 
 # TODO
 class Call(BlockBase, extra='ignore'):
+    class CallVersions(NoExtra, extra='ignore'):
+        class CallData(NoExtra, extra='ignore'):
+            name: str
+
+        v1: CallData
+
     type: Literal['call']
     call_id: str
     api_decoration_available: bool
-    call: dict
+    call: CallVersions
+
+    def convert(self, context):
+        return elements.Header(element=elements.Text(text=self.call.v1.name))
 
 
 class Section(BlockBase):

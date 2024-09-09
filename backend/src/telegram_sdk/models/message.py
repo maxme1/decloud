@@ -1,19 +1,17 @@
 from __future__ import annotations
 
 import datetime
-from typing import Annotated, Literal, Union
+from typing import Literal, Union
 
-from pydantic import BeforeValidator
-
-from ...elements import EmojiBase
-from ...schema import AgentMessage, Reaction, Shared
-from ..utils import TypeDispatch
 from .content import ContentBase
 from .events import SystemEvent
-from .sender import Sender, SenderChat
+from .sender import Sender, SenderChat, SenderUser
+from ..utils import FlaggedTimestamp, Subclasses, TypeDispatch
+from ...elements import EmojiBase
+from ...schema import AgentMessage, Reaction, Shared
+from ...utils import Maybe
 
 
-FlaggedTimestamp = Annotated[datetime.datetime | None, BeforeValidator(lambda x: x or None)]
 Content = Union[*ContentBase.__subclasses__()]
 
 
@@ -28,10 +26,10 @@ class Message(TypeDispatch):
     date: datetime.datetime
     edit_date: FlaggedTimestamp
 
-    interaction_info: InteractionInfo | None = None
-    forward_info: ForwardInfo | None = None
-    reply_to: ReplyTo | None = None
-    reply_markup: Markup | None = None
+    interaction_info: Maybe[InteractionInfo]
+    forward_info: Maybe[ForwardInfo]
+    reply_to: Maybe[ReplyTo]
+    reply_markup: Maybe[Markup]
 
     author_signature: str
     auto_delete_in: int
@@ -54,6 +52,19 @@ class Message(TypeDispatch):
     sender_business_bot_user_id: int
     unread_reactions: list
     via_bot_user_id: int
+
+    def get_user_ids(self):
+        yield from self.content.get_user_ids()
+        if isinstance(self.sender_id, SenderUser):
+            yield self.sender_id.user_id
+        if self.reply_to and self.reply_to.origin:
+            uid = self.reply_to.origin.get_ids()[0]
+            if uid is not None:
+                yield uid
+        if self.forward_info and self.forward_info.origin:
+            uid = self.forward_info.origin.get_ids()[0]
+            if uid is not None:
+                yield uid
 
     def convert(self, context):
         reactions = []
@@ -127,7 +138,7 @@ class InteractionInfo(TypeDispatch):
             type: ReactionType
             total_count: int
             is_chosen: bool
-            used_sender_id: Sender | None = None
+            used_sender_id: Maybe[Sender]
             recent_sender_ids: list[Sender]
 
         type_: Literal['messageReactions']
@@ -145,8 +156,8 @@ class InteractionInfo(TypeDispatch):
         last_message_id: int
 
     type_: Literal['messageInteractionInfo']
-    reactions: Reactions | None = None
-    reply_info: ReplyInfo | None = None
+    reactions: Maybe[Reactions]
+    reply_info: Maybe[ReplyInfo]
     view_count: int
     forward_count: int
 
@@ -172,41 +183,38 @@ class ForwardInfo(TypeDispatch):
     class Source(TypeDispatch):
         type_: Literal['forwardSource']
         chat_id: int
-        sender_id: Sender | None = None
+        sender_id: Maybe[Sender]
         message_id: int
         sender_name: str
         date: datetime.datetime
         is_outgoing: bool
 
     type_: Literal['messageForwardInfo']
-    source: Source | None = None
-    origin: Origin | None = None
+    source: Maybe[Source]
+    origin: Maybe[Origin]
     date: FlaggedTimestamp
     public_service_announcement_type: str
 
 
 class OriginBase(TypeDispatch):
     def get_ids(self):
-        # TODO
-        match self:
-            case UserOrigin(sender_user_id=agent_id):
-                return agent_id, None
-            case ChatOrigin(sender_chat_id=sender_chat_id):
-                return None, sender_chat_id
-            case ChannelOrigin(chat_id=chat_id):
-                return None, chat_id
-
-        return None, None
+        raise NotImplementedError
 
 
 class UserOrigin(OriginBase):
     type_: Literal['messageOriginUser']
     sender_user_id: int
 
+    def get_ids(self):
+        return self.sender_user_id, None
+
 
 class HiddenUserOrigin(OriginBase):
     type_: Literal['messageOriginHiddenUser']
     sender_name: str
+
+    def get_ids(self):
+        return None, None
 
 
 class ChannelOrigin(OriginBase):
@@ -215,24 +223,30 @@ class ChannelOrigin(OriginBase):
     message_id: int
     author_signature: str
 
+    def get_ids(self):
+        return None, self.chat_id
+
 
 class ChatOrigin(OriginBase):
     type_: Literal['messageOriginChat']
     sender_chat_id: int
     author_signature: str
 
+    def get_ids(self):
+        return None, self.sender_chat_id
 
-Origin = Union[*OriginBase.__subclasses__()]
+
+Origin = Subclasses[OriginBase]
 
 
 class ReplyTo(TypeDispatch):
     type_: Literal['messageReplyToMessage']
-    origin: Origin | None = None
-    content: Content | None = None
+    origin: Maybe[Origin]
+    content: Maybe[Content]
     chat_id: int
     message_id: int
     origin_send_date: FlaggedTimestamp
-    quote: dict | None = None
+    quote: Maybe[dict]
 
 
 class MarkupBase(TypeDispatch):

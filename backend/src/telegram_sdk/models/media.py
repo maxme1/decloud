@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Literal
 
 from ..utils import Subclasses, TypeDispatch
+from ...utils import Maybe
 
 
 class Sticker(TypeDispatch):
@@ -14,7 +15,7 @@ class Sticker(TypeDispatch):
 
     class Regular(TypeBase):
         type_: Literal['stickerFullTypeRegular']
-        premium_animation: File | None = None
+        premium_animation: Maybe[File]
 
     class CustomEmoji(TypeBase):
         type_: Literal['stickerFullTypeCustomEmoji']

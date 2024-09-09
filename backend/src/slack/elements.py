@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Literal, Union
 
 from .. import elements
-from ..utils import NoExtra, split_into_segments
+from ..utils import NoExtra, Maybe, split_into_segments
 from .mrkdwn import convert_mrkdwn
 from .utils import standard_emojis, to_unicode
 
@@ -39,7 +39,7 @@ def convert_elements(xs: list[Element], context) -> list[elements.Element]:
 
 
 class ElementBase(NoExtra):
-    style: Style | None = None
+    style: Maybe[Style]
 
     def convert(self, context):
         dump = self.model_dump()
@@ -72,9 +72,9 @@ def _apply_style(x, style):
 class RichTextElement(ElementBase):
     type: Literal['rich_text_section', 'rich_text_preformatted', 'rich_text_quote']
     elements: list[Element]
-    indent: int | None = None
-    border: int | None = None
-    offset: int | None = None
+    indent: Maybe[int]
+    border: Maybe[int]
+    offset: Maybe[int]
 
     def convert(self, context):
         assert not self.style, self.style
@@ -98,9 +98,9 @@ class RichTextElement(ElementBase):
 class RichTextList(ElementBase):
     type: Literal['rich_text_list']
     elements: list[Element]
-    indent: int | None = None
-    border: int | None = None
-    offset: int | None = None
+    indent: Maybe[int]
+    border: Maybe[int]
+    offset: Maybe[int]
     style: StyleStr
 
     def convert(self, context):
@@ -149,12 +149,12 @@ class Mrkdwn(ElementBase):
 class Emoji(ElementBase):
     type: Literal['emoji']
     name: str | None
-    unicode: str | None = None
-    skin_tone: int | None = None
+    unicode: Maybe[str]
+    skin_tone: Maybe[int]
     # TODO: ???
-    url: str | None = None
-    display_url: str | None = None
-    display_team_id: str | None = None
+    url: Maybe[str]
+    display_url: Maybe[str]
+    display_team_id: Maybe[str]
 
     def convert(self, context):
         # assert not self.style, self.style
@@ -168,9 +168,9 @@ class Emoji(ElementBase):
 class Link(ElementBase):
     type: Literal['link']
     url: str
-    text: str | None = None
+    text: Maybe[str]
 
-    unsafe: bool | None = None
+    unsafe: Maybe[bool]
 
     def convert(self, context):
         text = self.text
@@ -182,7 +182,7 @@ class Link(ElementBase):
 class Image(ElementBase):
     type: Literal['image']
     image_url: str
-    alt_text: str | None = None
+    alt_text: Maybe[str]
 
     def convert(self, context):
         assert not self.style, self.style
@@ -215,11 +215,11 @@ class UserGroup(ElementBase):
 class Button(ElementBase):
     type: Literal['button']
     text: PlainText
-    value: str | None = None
+    value: Maybe[str]
     action_id: str
-    url: str | None = None
-    style: StyleStr | None = None
-    confirm: dict | None = None
+    url: Maybe[str]
+    style: Maybe[StyleStr]
+    confirm: Maybe[dict]
 
     def convert(self, context):
         dump = self.model_dump()

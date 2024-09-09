@@ -1,0 +1,296 @@
+[
+  {
+    "username": "U1234",
+    "display_name": "Alice",
+    "text": "Hey team, we need to start thinking about the chat backup feature for the app.",
+    "timestamp": "2023-09-01T09:15:23",
+    "is_bot": false
+  },
+  {
+    "username": "U5678",
+    "display_name": "Bob",
+    "text": "Good point <@U1234>. Should we support *cloud storage* integration?",
+    "timestamp": "2023-09-01T09:17:45",
+    "is_bot": false
+  },
+  {
+    "username": "U9101",
+    "display_name": "Charlie",
+    "text": "I think **Google Drive** and **Dropbox** would be good options for now. Maybe we should discuss this in <#C123ABC>?",
+    "timestamp": "2023-09-01T09:20:10",
+    "is_bot": false
+  },
+  {
+    "username": "U2345",
+    "display_name": "David",
+    "text": "We should also consider local storage backup for users who prefer that.",
+    "timestamp": "2023-09-01T09:22:50",
+    "is_bot": false
+  },
+  {
+    "username": "U3456",
+    "display_name": "Eve",
+    "text": "Agreed! I’ll start drafting the API for cloud and local backup options.",
+    "timestamp": "2023-09-01T09:25:15",
+    "is_bot": false
+  },
+  {
+    "username": "U5678",
+    "display_name": "Bob",
+    "text": "I'll work on the UI for selecting backup destinations. We need a seamless experience here.",
+    "timestamp": "2023-09-01T09:30:45",
+    "is_bot": false
+  },
+  {
+    "username": "U1234",
+    "display_name": "Alice",
+    "text": "Should we also notify users when a backup is complete or failed?",
+    "timestamp": "2023-09-01T09:35:10",
+    "is_bot": false
+  },
+  {
+    "username": "U2345",
+    "display_name": "David",
+    "text": "Yes, a notification system for success and failure is a must. I'll handle that.",
+    "timestamp": "2023-09-01T09:38:50",
+    "is_bot": false
+  },
+  {
+    "username": "U3456",
+    "display_name": "Eve",
+    "text": "We should make use of the same notification framework as the other app features to keep things consistent.",
+    "timestamp": "2023-09-01T09:40:25",
+    "is_bot": false
+  },
+  {
+    "username": "U5678",
+    "display_name": "Bob",
+    "text": "I'll update the UI mockups to include a notification icon for backup status.",
+    "timestamp": "2023-09-01T09:42:10",
+    "is_bot": false
+  },
+  {
+    "username": "U9101",
+    "display_name": "Charlie",
+    "text": "What about encryption? We should ensure all backups are encrypted.",
+    "timestamp": "2023-09-02T10:05:10",
+    "is_bot": false
+  },
+  {
+    "username": "U2345",
+    "display_name": "David",
+    "text": "Good call. I’ll use AES-256 for local backups and integrate cloud services’ encryption for cloud backups.",
+    "timestamp": "2023-09-02T10:10:45",
+    "is_bot": false
+  },
+  {
+    "username": "U3456",
+    "display_name": "Eve",
+    "text": "I can update the docs to reflect the encryption standards for the backups.",
+    "timestamp": "2023-09-02T10:12:50",
+    "is_bot": false
+  },
+  {
+    "username": "U1234",
+    "display_name": "Alice",
+    "text": "Thanks, <@U3456>! Also, how should we handle large backups? Should we split them?",
+    "timestamp": "2023-09-02T10:15:30",
+    "is_bot": false
+  },
+  {
+    "username": "U5678",
+    "display_name": "Bob",
+    "text": "Yes, for anything over 100MB, we should split and upload in chunks. I’ll work on the logic for that.",
+    "timestamp": "2023-09-02T10:20:45",
+    "is_bot": false
+  },
+  {
+    "username": "U9101",
+    "display_name": "Charlie",
+    "text": "I’ll add error handling in case a chunk fails during upload.",
+    "timestamp": "2023-09-02T10:22:15",
+    "is_bot": false
+  },
+  {
+    "username": "U1234",
+    "display_name": "Alice",
+    "text": "We also need to think about supporting automatic periodic backups. Maybe let users set a schedule?",
+    "timestamp": "2023-09-03T11:05:35",
+    "is_bot": false
+  },
+  {
+    "username": "U5678",
+    "display_name": "Bob",
+    "text": "A simple daily, weekly, and monthly option should work. We can add custom intervals later.",
+    "timestamp": "2023-09-03T11:08:40",
+    "is_bot": false
+  },
+  {
+    "username": "U2345",
+    "display_name": "David",
+    "text": "I'll implement a cron job system for scheduling the backups.",
+    "timestamp": "2023-09-03T11:10:15",
+    "is_bot": false
+  },
+  {
+    "username": "U3456",
+    "display_name": "Eve",
+    "text": "Make sure users can toggle automatic backups off if they don’t want it.",
+    "timestamp": "2023-09-03T11:12:50",
+    "is_bot": false
+  },
+  {
+    "username": "U1234",
+    "display_name": "Alice",
+    "text": "We should also give users a way to *manually* trigger a backup anytime.",
+    "timestamp": "2023-09-03T11:15:30",
+    "is_bot": false
+  },
+  {
+    "username": "U5678",
+    "display_name": "Bob",
+    "text": "I'll add a 'Backup Now' button to the settings page. That should cover it.",
+    "timestamp": "2023-09-03T11:20:45",
+    "is_bot": false
+  },
+  {
+    "username": "U9101",
+    "display_name": "Charlie",
+    "text": "Testing on my side is going well. I’ve tried several scenarios with the cloud backups, and so far no issues.",
+    "timestamp": "2023-09-04T12:05:20",
+    "is_bot": false
+  },
+  {
+    "username": "U3456",
+    "display_name": "Eve",
+    "text": "Same here with the local backups. I’ve tested both encryption and chunking. Looks good.",
+    "timestamp": "2023-09-04T12:08:45",
+    "is_bot": false
+  },
+  {
+    "username": "U1234",
+    "display_name": "Alice",
+    "text": "Great! Let’s start documenting the backup feature so we can prepare the release notes.",
+    "timestamp": "2023-09-04T12:15:30",
+    "is_bot": false
+  },
+  {
+    "username": "U3456",
+    "display_name": "Eve",
+    "text": "I’m on it. I’ll start drafting the user guide and technical documentation.",
+    "timestamp": "2023-09-04T12:18:50",
+    "is_bot": false
+  },
+  {
+    "username": "U9101",
+    "display_name": "Charlie",
+    "text": "Should we have a small FAQ section in the docs too?",
+    "timestamp": "2023-09-04T12:20:30",
+    "is_bot": false
+  },
+  {
+    "username": "U1234",
+    "display_name": "Alice",
+    "text": "Yes, definitely. We can include common questions like 'how to restore backups' and 'how to check backup status'.",
+    "timestamp": "2023-09-04T12:22:50",
+    "is_bot": false
+  },
+  {
+    "username": "U5678",
+    "display_name": "Bob",
+    "text": "I’ll also add some UI tips for the FAQ, like where to find the backup logs.",
+    "timestamp": "2023-09-04T12:25:15",
+    "is_bot": false
+  },
+  {
+    "username": "U1234",
+    "display_name": "Alice",
+    "text": "Thanks, everyone! Let’s aim to finish the documentation by the end of the week.",
+    "timestamp": "2023-09-04T12:28:30",
+    "is_bot": false
+  },
+  {
+    "username": "Bot: Backup Bot",
+    "display_name": "Bot: Backup Bot",
+    "text": "**Reminder:** Next Thursday is the deadline for the backup feature. Don't forget to submit your work!",
+    "timestamp": "2023-09-05T13:05:10",
+    "is_bot": true
+  },
+  {
+    "username": "U1234",
+    "display_name": "Alice",
+    "text": "Hey team, just a question about the backup feature. What happens if a user deletes a conversation? Does it get backed up too?",
+    "timestamp": "2023-09-06T14:05:30",
+    "is_bot": false
+  },
+  {
+    "username": "Bot: Backup Bot",
+    "display_name": "Bot: Backup Bot",
+    "text": "**Reminder:** Next Thursday is the deadline for the backup feature. Don't forget to submit your work!",
+    "timestamp": "2023-09-06T14:10:45",
+    "is_bot": true
+  },
+  {
+    "username": "U5678",
+    "display_name": "Bob",
+    "text": "I've created a wiki page to document the backup feature. You can find it here <https://ourteam.slack.com/wiki/Backup-Feature>",
+    "timestamp": "2023-09-06T14:20:35",
+    "is_bot": false
+  },
+  {
+    "username": "U1234",
+    "display_name": "Alice",
+    "text": "Nice work @Bob! I've added some details to the wiki page. Let me know if you'd like me to add anything else.",
+    "timestamp": "2023-09-06T14:25:50",
+    "is_bot": false
+  },
+  {
+    "username": "Bot: Backup Bot",
+    "display_name": "Bot: Backup Bot",
+    "text": "**Deadline reminder:** Next Thursday is the last day to submit your work on the backup feature. Don't forget!",
+    "timestamp": "2023-09-06T14:30:10",
+    "is_bot": true
+  },
+  {
+    "username": "U9101",
+    "display_name": "Charlie",
+    "text": "Hey team, I've created a wiki page to document the backup feature. You can find it here <https://ourteam.slack.com/wiki/Backup-Feature>",
+    "timestamp": "2023-09-06T14:35:30",
+    "is_bot": false
+  },
+  {
+    "username": "U1234",
+    "display_name": "Alice",
+    "text": "Nice work @Charlie! I've added some details to the wiki page. Let me know if you'd like me to add anything else.",
+    "timestamp": "2023-09-06T14:40:45",
+    "is_bot": false
+  },
+  {
+    "username": "Bot: Backup Bot",
+    "display_name": "Bot: Backup Bot",
+    "text": "**Deadline reminder:** Next Thursday is the last day to submit your work on the backup feature. Don't forget!",
+    "timestamp": "2023-09-06T14:45:10",
+    "is_bot": true
+  },
+  {
+    "username": "U1234",
+    "display_name": "Alice",
+    "text": "Hey team, just a question about the backup feature. What happens if a user deletes a conversation? Does it get backed up too?",
+    "timestamp": "2023-09-06T14:50:30",
+    "is_bot": false
+  },
+  {
+    "username": "Bot: Backup Bot",
+    "display_name": "Bot: Backup Bot",
+    "text": "**Reminder:** Next Thursday is the deadline for the backup feature. Don't forget to submit your work!",
+    "timestamp": "2023-09-06T14:55:45",
+    "is_bot": true
+  },
+  {
+    "username": "U5678",
+    "display_name": "Bob",
+    "text": "I've created a wiki page to document the backup feature. You can find it here <https://ourteam.slack.com/wiki/Backup-Feature>",
+    "timestamp": "2023-09-06T15:00:10",
+    "is_bot": false
+  }
+]

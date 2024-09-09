@@ -30,6 +30,7 @@ class FormattedText(TypeDispatch):
                     'textEntityTypeUnderline': partial(elements.Strike, position='under'),
                     'textEntityTypeCode': elements.Preformat,
                     'textEntityTypeBlockQuote': elements.Quote,
+                    'textEntityTypePre': partial(elements.Code, language=None),
                 }
                 if t in wrappers:
                     return wrappers[t](element=element)
@@ -44,8 +45,11 @@ class FormattedText(TypeDispatch):
                 return elements.Link(url=url, element=element)
             case TextEntityTypePreCode(language=language):
                 return elements.Code(element=element, language=language)
+            case TextEntityTypeMediaTimestamp(media_timestamp=media_timestamp):
+                # TODO
+                return element
             case _:
-                raise NotImplementedError(entity)
+                raise NotImplementedError(entity, self.text)
 
     def convert(self):
         # group nested entities

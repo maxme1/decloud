@@ -1,8 +1,12 @@
-from typing import Union
+import datetime
+from typing import Annotated, TypeVar, Union
 
-from pydantic import model_validator
+from pydantic import BeforeValidator, model_validator
 
 from ..utils import NoExtra
+
+
+FlaggedTimestamp = Annotated[datetime.datetime | None, BeforeValidator(lambda x: x or None)]
 
 
 class TypeDispatch(NoExtra):
@@ -15,6 +19,9 @@ class TypeDispatch(NoExtra):
         return values
 
 
+T = TypeVar('T')
+
+
 class Subclasses:
-    def __class_getitem__(cls, item):
+    def __class_getitem__(cls, item: T) -> T:
         return Union[*item.__subclasses__()]

@@ -9,7 +9,7 @@
     import SystemAgents from "./SystemAgents.svelte";
     import Call from "../events/Call.svelte";
     import Join from "../events/Join.svelte";
-    import Leave from "../events/Join.svelte";
+    import Leave from "../events/Leave.svelte";
     import Rename from "$lib/events/Rename.svelte";
 
     export let message: SystemMessage;

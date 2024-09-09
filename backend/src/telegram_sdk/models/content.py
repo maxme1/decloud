@@ -9,6 +9,7 @@ from ..utils import Subclasses, TypeDispatch
 from .media import File, MiniThumbnail, PhotoSize, Sticker, Thumbnail
 from .sender import Sender
 from .text import FormattedText
+from ...utils import Maybe
 
 
 class ContentBase(TypeDispatch):
@@ -17,9 +18,18 @@ class ContentBase(TypeDispatch):
     def get_files(self) -> Iterable[File]:
         return []
 
+    def get_user_ids(self) -> Iterable[int]:
+        return []
+
     def convert(self, context):
-        print(type(self).__name__)
-        return elements.Text(text=type(self).__name__)
+        name = type(self).__name__
+        if name not in _printed:
+            _printed.add(name)
+            print(name)
+        return elements.Text(text=name)
+
+
+_printed = set()
 
 
 class MessageAnimatedEmoji(ContentBase):
@@ -29,7 +39,7 @@ class MessageAnimatedEmoji(ContentBase):
         sticker_width: int
         sticker_height: int
         fitzpatrick_type: int
-        sound: File | None = None
+        sound: Maybe[File]
 
     type_: Literal['messageAnimatedEmoji']
     animated_emoji: AnimatedEmoji
@@ -58,8 +68,8 @@ class MessageAudio(ContentBase):
         mime_type: str
         external_album_covers: list[dict]
         audio: File
-        album_cover_minithumbnail: MiniThumbnail | None = None
-        album_cover_thumbnail: Thumbnail | None = None
+        album_cover_minithumbnail: Maybe[MiniThumbnail]
+        album_cover_thumbnail: Maybe[Thumbnail]
 
     type_: Literal['messageAudio']
     audio: Audio
@@ -95,12 +105,22 @@ class MessageContact(ContentBase):
 
 
 class MessageDice(ContentBase):
+    class DiceStickers(TypeDispatch):
+        type_: Literal['diceStickersRegular']
+        sticker: Sticker
+
     type_: Literal['messageDice']
-    initial_state: dict
-    final_state: dict
+    initial_state: DiceStickers
+    final_state: DiceStickers
     emoji: str
     value: int
     success_animation_frame_number: int
+
+    def get_files(self):
+        return [self.initial_state.sticker.sticker, self.final_state.sticker.sticker]
+
+    def convert(self, context):
+        return elements.Bold(element=elements.Text(text=f'Dice roll: {self.emoji} {self.value}'))
 
 
 class MessageVenue(ContentBase):
@@ -115,6 +135,12 @@ class MessageVenue(ContentBase):
 
     type_: Literal['messageVenue']
     venue: Venue
+
+    def convert(self, context):
+        return elements.Location(
+            name=self.venue.title, address=self.venue.address,
+            latitude=self.venue.location.latitude, longitude=self.venue.location.longitude,
+        )
 
 
 class Location(TypeDispatch):
@@ -208,8 +234,8 @@ class MessageDocument(ContentBase):
         type_: Literal['document']
         file_name: str
         mime_type: str
-        minithumbnail: MiniThumbnail | None = None
-        thumbnail: Thumbnail | None = None
+        minithumbnail: Maybe[MiniThumbnail]
+        thumbnail: Maybe[Thumbnail]
         document: File
 
     type_: Literal['messageDocument']
@@ -227,16 +253,11 @@ class MessageDocument(ContentBase):
         )
 
 
-class MessageVideoChatStarted(ContentBase):
-    type_: Literal['messageVideoChatStarted']
-    group_call_id: int
-
-
 class MessageText(ContentBase):
     type_: Literal['messageText']
-    text: FormattedText | None = None
-    link_preview: dict | None = None
-    link_preview_options: dict | None = None
+    text: Maybe[FormattedText]
+    link_preview: Maybe[dict]
+    link_preview_options: Maybe[dict]
 
     def convert(self, context):
         return self.text.convert()
@@ -253,7 +274,7 @@ class MediaMixin(BaseModel):
 class MessagePhoto(ContentBase, MediaMixin):
     class Photo(TypeDispatch):
         type_: Literal['photo']
-        minithumbnail: MiniThumbnail | None = None
+        minithumbnail: Maybe[MiniThumbnail]
         sizes: list[PhotoSize]
         has_stickers: bool
 
@@ -264,8 +285,9 @@ class MessagePhoto(ContentBase, MediaMixin):
         return [size.photo for size in self.photo.sizes]
 
     def convert(self, context):
-        element = elements.Image(url=context.get_file_url(max(self.photo.sizes, key=lambda x: x.photo.size).photo),
-                                 name=None)
+        element = elements.Image(
+            url=context.get_file_url(max(self.photo.sizes, key=lambda x: x.photo.size).photo), name=None
+        )
         if self.caption:
             return elements.Sequence(elements=[element, self.caption.convert()])
         return element
@@ -278,8 +300,8 @@ class MediaMessageMixin(BaseModel):
     file_name: str
     mime_type: str
     has_stickers: bool
-    minithumbnail: MiniThumbnail | None = None
-    thumbnail: Thumbnail | None = None
+    minithumbnail: Maybe[MiniThumbnail]
+    thumbnail: Maybe[Thumbnail]
 
 
 class MessageVideo(ContentBase, MediaMixin):
@@ -368,6 +390,12 @@ class MessagePoll(ContentBase):
 
     type_: Literal['messagePoll']
     poll: Poll
+
+    def convert(self, context):
+        return elements.Section(element=elements.Sequence(elements=[
+            elements.Header(element=self.poll.question.convert()),
+            elements.List(elements=[option.text.convert() for option in self.poll.options], style='ordered'),
+        ]))
 
 
 def thumbnail(x):

@@ -2,6 +2,7 @@
     import type { Chat } from "./client";
     import { activeChannel } from "./store";
     import ConvLogo from "./ConvLogo.svelte";
+    import { base } from "$app/paths";
 
     export let channels: Chat[];
 
@@ -16,7 +17,7 @@
         {#each channels as channel}
             <li class="w-full">
                 <a
-                    href="/channels/{channel.source}/{channel.id}"
+                    href="{base}/channels/{channel.source}/{channel.id}"
                     class="text-gray-500 dark:text-gray-400 hover:bg-gray-200 rounded-md py-1 px-0.5 w-full text-left flex items-center text-nowrap text-clip"
                     class:bg-gray-300={channel.id ===
                         $activeChannel?.channel.id}

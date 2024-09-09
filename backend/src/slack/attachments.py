@@ -155,4 +155,4 @@ def no_mrkdwn(text, unpack):
     if not unpack:
         return Text(text=text)
 
-    return Sequence(elements=convert_mrkdwn(text))
+    return Sequence.wrap(convert_mrkdwn(text))

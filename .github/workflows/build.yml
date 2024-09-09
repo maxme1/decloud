@@ -1,0 +1,49 @@
+name: Build the site
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.12'
+      - name: Build the demo history
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          python scripts/generate-demo.py /tmp/demo
+          cd ..
+
+      - name: Build the site
+        run: |
+          cd frontend
+          npm i --force
+          npm run deploy
+          mv build/*/* /tmp/demo/
+          cd ..
+
+      - name: Prepare the branch
+        run: |
+          git fetch origin gh-pages --depth=1
+          git checkout gh-pages
+          # move old content
+          rm -rf ./*
+          mv /tmp/demo/* ./
+
+      - name: Deploy
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions-bot@users.noreply.github.com'
+          git add -u && git add .
+          git commit -m "compiled"
+          git push

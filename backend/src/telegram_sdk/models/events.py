@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import datetime
-from typing import Literal
+from typing import Iterable, Literal
 
 from ... import elements, schema
 from ..utils import TypeDispatch
 from .content import ContentBase
-from .media import MiniThumbnail, PhotoSize, Sticker
+from .media import MiniThumbnail, PhotoSize
 
 
 class SystemEvent:
@@ -43,7 +43,6 @@ class MessageCall(SystemEvent, ContentBase):
     duration: int
     discard_reason: Reason
 
-    _event = 'call'
     _event_class = schema.Call
 
     def kwargs(self, message):
@@ -57,10 +56,14 @@ class ChatAddMembers(SystemEvent, ContentBase):
     type_: Literal['messageChatAddMembers']
     member_user_ids: list[int]
 
-    _event = 'join'
+    _event_class = schema.Join
 
     def kwargs(self, message):
-        return dict(agents=self.member_user_ids)
+        uid = message.sender_id.user_id
+        return dict(agents=self.member_user_ids, by=str(uid) if uid not in self.member_user_ids else None)
+
+    def get_user_ids(self) -> Iterable[int]:
+        return self.member_user_ids
 
 
 class BasicGroupChatCreate(SystemEvent, ContentBase):
@@ -72,6 +75,9 @@ class BasicGroupChatCreate(SystemEvent, ContentBase):
 
     def kwargs(self, message):
         return dict(agents=self.member_user_ids)
+
+    def get_user_ids(self) -> Iterable[int]:
+        return self.member_user_ids
 
 
 class SupergroupChatCreate(SystemEvent, ContentBase):
@@ -104,6 +110,19 @@ class ForumTopicIsClosedToggled(SystemEvent, ContentBase):
 
 class ChatChangePhoto(SystemEvent, ContentBase):
     class ChatPhoto(TypeDispatch):
+        class ChatPhotoSticker(TypeDispatch):
+            class BGFill(TypeDispatch):
+                type_: Literal['backgroundFillFreeformGradient']
+                colors: list[int]
+
+            class CustomEmoji(TypeDispatch):
+                type_: Literal['chatPhotoStickerTypeCustomEmoji']
+                custom_emoji_id: int
+
+            type_: Literal['chatPhotoSticker']
+            type: CustomEmoji
+            background_fill: BGFill
+
         type_: Literal['chatPhoto']
         id: str
         sizes: list[PhotoSize]
@@ -111,7 +130,7 @@ class ChatChangePhoto(SystemEvent, ContentBase):
         minithumbnail: MiniThumbnail | None = None
         animation: dict | None = None
         small_animation: dict | None = None
-        sticker: Sticker | None = None
+        sticker: ChatPhotoSticker | None = None
 
     type_: Literal['messageChatChangePhoto']
     photo: ChatPhoto
@@ -119,8 +138,6 @@ class ChatChangePhoto(SystemEvent, ContentBase):
     def get_files(self):
         for size in self.photo.sizes:
             yield size.photo
-        if self.photo.sticker:
-            yield self.photo.sticker.sticker
 
     def convert(self, context):
         if self.photo.sizes:
@@ -133,10 +150,14 @@ class ChatDeleteMember(SystemEvent, ContentBase):
     type_: Literal['messageChatDeleteMember']
     user_id: int
 
-    _event = 'leave'
+    _event_class = schema.Leave
 
     def kwargs(self, message):
-        return dict(agents=[self.user_id])
+        uid = message.sender_id.user_id
+        return dict(agents=[self.user_id], by=str(uid) if self.user_id != uid else None)
+
+    def get_user_ids(self) -> Iterable[int]:
+        yield self.user_id
 
 
 class ChatSetTheme(SystemEvent, ContentBase):
@@ -155,9 +176,19 @@ class PinMessage(SystemEvent, ContentBase):
     message_id: int
 
 
+class VideoChatStarted(SystemEvent, ContentBase):
+    type_: Literal['messageVideoChatStarted']
+    group_call_id: int
+
+
 class VideoChatEnded(SystemEvent, ContentBase):
     type_: Literal['messageVideoChatEnded']
     duration: int
+
+    _event_class = schema.Call
+
+    def kwargs(self, message):
+        return dict(duration=self.duration, status=None)
 
 
 class InviteVideoChatParticipants(SystemEvent, ContentBase):
@@ -165,14 +196,17 @@ class InviteVideoChatParticipants(SystemEvent, ContentBase):
     group_call_id: int
     user_ids: list[int]
 
+    def get_user_ids(self) -> Iterable[int]:
+        return self.user_ids
+
 
 class JoinByLink(SystemEvent, ContentBase):
     type_: Literal['messageChatJoinByLink']
 
-    _event = 'join'
+    _event_class = schema.Join
 
     def kwargs(self, message):
-        return dict(agents=[message.sender_id.user_id])
+        return dict(agents=[message.sender_id.user_id], by=None)
 
 
 class SimpleEvent(SystemEvent, ContentBase):

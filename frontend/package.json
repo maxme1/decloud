@@ -1,11 +1,11 @@
 {
-  "name": "chat-browser",
+  "name": "decloud",
   "version": "0.0.1",
   "private": true,
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "deploy": "VITE_FILE_SERVER=/chat-browser/chats SVELTE_PATH_BASE=/chat-browser npm run build --base=/chat-browser",
+    "deploy": "VITE_API_ROOT=/decloud SVELTE_PATH_BASE=/decloud npm run build --base=/decloud",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",

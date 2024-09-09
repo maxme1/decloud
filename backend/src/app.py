@@ -44,14 +44,14 @@ async def chats() -> list[Chat]:
 async def messages(source: str, chat_id: str) -> list[AnyMessage]:
     chat = ChatInterface.find(source)
     result = []
-    for msg in chat.load(chat_id):
+    for message in chat.load(chat_id):
         try:
-            msg = chat.validate(msg)
+            message = chat.validate(message)
         except Exception as e:
-            raise RuntimeError(msg) from e
+            raise RuntimeError(message) from e
 
-        ready = chat.convert(msg)
-        result.append(ready)
+        message = chat.convert(message)
+        result.append(message)
 
     return result
 
