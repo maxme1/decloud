@@ -6,6 +6,9 @@ This is a minimalistic manager for you local backups of
 - Telegram full backups through its Client SDK
 - Slack full backups though its API
 
+Here's a [demo](https://maxme1.github.io/decloud/) with some random chats just to give you an idea of what it looks
+like.
+
 # What can it do?
 
 Pretty much everything except sending messages:
