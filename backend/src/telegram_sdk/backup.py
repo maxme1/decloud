@@ -4,7 +4,7 @@ import shutil
 import string
 import time
 from collections import defaultdict
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 import rich
@@ -33,8 +33,38 @@ class TgSettings(BaseSettings):
     files_directory: Path | None = None
 
 
+class ChatType(StrEnum):
+    bot = 'bot'
+    personal = 'personal'
+    group = 'group'
+    supergroup = 'supergroup'
+    channel = 'channel'
+
+    @classmethod
+    def detect(cls, chat: Chat, users: dict):
+        match chat.type:
+            case Chat.ChatTypePrivate(user_id=user_id):
+                if user_id in users and isinstance(users[user_id].type, User.BotUser):
+                    return cls.bot
+                return cls.personal
+            case Chat.ChatTypeBasicGroup():
+                return cls.group
+            case Chat.ChatTypeSupergroup(is_channel=is_channel):
+                return cls.channel if is_channel else cls.supergroup
+            case _:
+                raise ValueError(f'Unknown chat type: {chat.type}')
+
+
+class ChatContent(StrEnum):
+    conversations = 'conversations'
+    messages = 'messages'
+    users = 'users'
+    files = 'files'
+
+
 @app.command()
-def telegram_sdk(storage: Path):
+def telegram_sdk(storage: Path, types: list[ChatType] = tuple(ChatType),
+                 content: list[ChatContent] = tuple(ChatContent)):
     from telegram.client import Telegram  # noqa
 
     settings = TgSettings(_env_file=storage / '.env')
@@ -60,41 +90,17 @@ def telegram_sdk(storage: Path):
         # system_version: str = 'unknown',
     )
     client.login()
-    download(client, storage)
+    download(client, storage, types, content)
 
 
-class ChatType(Enum):
-    bot, personal, group, supergroup, channel = range(5)
-
-    @classmethod
-    def detect(cls, chat: Chat, users: dict):
-        match chat.type:
-            case Chat.ChatTypePrivate(user_id=user_id):
-                if user_id in users and isinstance(users[user_id].type, User.BotUser):
-                    return cls.bot
-                return cls.personal
-            case Chat.ChatTypeBasicGroup():
-                return cls.group
-            case Chat.ChatTypeSupergroup(is_channel=is_channel):
-                return cls.channel if is_channel else cls.supergroup
-            case _:
-                raise ValueError(f'Unknown chat type: {chat.type}')
-
-
-def download(client, storage):
+def download(client, storage, chat_types, content_types):
     storage = Path(storage)
     # fixme
     #  TODO: also update all chat lists
     chats_ids = wait(client.get_chats(limit=1000))['chat_ids']
     assert len(chats_ids) < 1000
 
-    # TODO: move to args
-    # filters
-    #  content type
-    update_chats = update_messages = update_users = update_files = True
-    update_messages = False
-    #  conversation type
-    update_types = ChatType.personal, ChatType.group, ChatType.supergroup
+    update_chats, update_messages, update_users, update_files = (x in content_types for x in ChatContent)
 
     # update the chats list
     chats_path = storage / 'chats.json'
@@ -126,7 +132,7 @@ def download(client, storage):
             for chat in progress(chats, desc='Processing messages'):
                 chat = Chat.model_validate(chat)
                 chat_type = ChatType.detect(chat, users_dict)
-                if chat_type not in update_types:
+                if chat_type not in chat_types:
                     rich.print(
                         f'[yellow]Skipping chat {chat.title} '
                         f'because it is of type [italic]{chat_type.name}[/italic][/yellow]'
@@ -137,19 +143,18 @@ def download(client, storage):
                 messages = load_backup(messages_path)
 
                 if update_messages:
-                    with progress(
+                    for message in progress(
                             get_all_messages(
                                 client, chat.id, to_message_id=max((x['id'] for x in messages), default=None)
                             ),
                             desc=f'{chat.title} (id: {chat.id})', leave=False
-                    ) as bar:
-                        for message in bar:
-                            messages.append(message)
+                    ):
+                        messages.append(message)
 
-                        # drop duplicates
-                        messages = list({x['id']: x for x in messages}.values())
-                        save_backup(messages, messages_path)
-                        time.sleep(1)
+                    # drop duplicates
+                    messages = list({x['id']: x for x in messages}.values())
+                    save_backup(messages, messages_path)
+                    time.sleep(1)
 
                 if update_files or update_users:
                     for message in progress(messages, desc=f'Processing messages for {chat.title}', leave=False):

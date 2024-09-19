@@ -44,19 +44,20 @@ def update(client: WebClient, storage: Path, conv_types, content_types):
     update_conversations, update_messages, update_users, update_files = (x in content_types for x in ChatContent)
 
     conversations_path = storage / 'conversations.json'
-    convs_to_visit = conversations = load_backup(conversations_path)
+    conversations = load_backup(conversations_path)
     if update_conversations:
-        convs_to_visit = list(paginated(
+        old = conversations
+        conversations = list(paginated(
             client.conversations_list, unpack='channels', limit=500,
             types=','.join(TYPE_MAPPING.get(x.value, x.value) for x in conv_types)
         ))
-        conversations = _update(convs_to_visit, conversations)
-        save_backup(conversations, conversations_path)
+        old = _update(conversations, old)
+        save_backup(old, conversations_path)
 
     profiles = {}
     if update_messages or update_users:
         with nested_rich() as progress:
-            for conversation in progress(convs_to_visit, desc='Processing messages'):
+            for conversation in progress(conversations, desc='Processing messages'):
                 channel = conversation['id']
                 path = storage / f'messages/{channel}.json'
                 messages = load_backup(path)
